@@ -1,0 +1,35 @@
+// This is the old simulate logic
+    for (int y = 0; y < GRID_SIZE; y++) {
+        for (int x = 0; x < GRID_SIZE; x++) {
+            int neighbors = 0;
+            int NeighborhoodBias = 8388608;
+            int R2INT = 0;
+            for (int dy = -2; dy <= 2; dy++) {
+                for (int dx = -2; dx <= 2; dx++) {
+                    if (dx == 0 && dy == 0) { continue; } // Center cell
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                        if (grid[ny][nx])
+                        {
+                            neighbors++;
+                            R2INT += NeighborhoodBias;
+                        }
+                    }
+                    else if (voidColor == true)
+                    {
+                        neighbors++;
+                        R2INT += NeighborhoodBias;
+                    }
+                    NeighborhoodBias /= 2;
+                }
+            }
+
+            nextGrid[y][x] = ApplyRules(grid[y][x], R2INT, Conditions);
+        }
+    }
+
+    voidColor = ApplyRules(voidColor, voidColor ? 16777215 : 0, Conditions);
+
+    // Copy nextGrid to grid
+    memcpy(grid, nextGrid, sizeof(grid));
