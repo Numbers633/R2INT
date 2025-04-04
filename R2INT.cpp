@@ -81,7 +81,7 @@ int main() {
     colors[9] = sf::Color(255, 127, 255, 255);
     colors[10] = sf::Color(255, 255, 127, 255);
 
-    sf::RenderWindow window(sf::VideoMode({ 1600, 1600 }), "R2INT");
+    sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
 
     // Load font
@@ -162,7 +162,7 @@ int main() {
 
         sf::VertexArray grid(sf::PrimitiveType::Triangles, GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
 
-        int cellSize = 8;
+        int cellSize = 4;
 
         for (int i = 0; i < GRID_DIMENSIONS; i++) {
             for (int j = 0; j < GRID_DIMENSIONS; j++) {
@@ -204,7 +204,25 @@ int main() {
 
             if (secondWindow)
             {
-                secondWindow->clear(sf::Color::Color(0, 255, 127, 255));
+                secondWindow->clear(sf::Color::Color(0, 170, 85, 255));
+                sf::RectangleShape rc;
+                for (int i = 0; i < 5; i++)
+                {
+                    for (int j = 0; j < 5; j++)
+                    {
+                        if (rnd(gen) >= 4)
+                        {
+                            rc.setFillColor(sf::Color::Color(0, 64, 32));
+                        }
+                        else
+                        {
+                            rc.setFillColor(sf::Color::Color(224, 255, 240));
+                        }
+                        rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
+                        rc.setSize({ 128.f, 128.f });
+                        secondWindow->draw(rc);
+                    }
+                }
                 secondWindow->display();
             }
         }
