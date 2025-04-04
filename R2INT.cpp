@@ -9,6 +9,11 @@
 
 R2INTRules globalRule;
 
+#define PERCENT_INCREMENT 8388608
+#ifdef _DEBUG
+#define PERCENT_INCREMENT 2097152
+#endif
+
 void InitializeRule()
 {
     std::cout << "Loading. . ." << std::endl;
@@ -40,7 +45,7 @@ void InitializeRule()
             }
         }
 
-        if (i % 2097152 == 2097151)
+        if (i % PERCENT_INCREMENT == PERCENT_INCREMENT - 1)
         {
             std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
         }
@@ -86,7 +91,7 @@ int main() {
         return -1;
     }
 
-    sf::Text menuText(font, "Open New Window", 24);
+    sf::Text menuText(font, "Open Rule Editor", 24);
     menuText.setPosition({ 10, 10 });
     menuText.setFillColor(sf::Color::White);
 
@@ -114,7 +119,7 @@ int main() {
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
                 if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
                     if (!secondWindow) {
-                        secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1280, 720 }), "Second Window");
+                        secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1280, 720 }), "R2INT - Rule Editor");
                     }
                 }
             }
@@ -199,7 +204,7 @@ int main() {
 
             if (secondWindow)
             {
-                secondWindow->clear(sf::Color::Blue);
+                secondWindow->clear(sf::Color::Color(0, 255, 127, 255));
                 secondWindow->display();
             }
         }
