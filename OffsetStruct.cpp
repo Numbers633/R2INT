@@ -211,3 +211,22 @@ bool ApplyRules(int Transition, const R2INTRules& rules) {
 bool ApplyRules(Neighborhood Transition, const R2INTRules& rules) {
 	return ApplyRules(ConvertNeighborhoodToInt(Transition), rules);
 }
+
+void R2INTRules::ToggleIsotropicTransition(Neighborhood n)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		int t = ConvertNeighborhoodToInt(n);
+		R2MAP[t] = !R2MAP[t];
+		n = RotateNeighborhoodCW(n);
+	}
+
+	n = MirrorNeighborhoodVertically(n);
+
+	for (int i = 0; i < 4; i++)
+	{
+		int t = ConvertNeighborhoodToInt(n);
+		R2MAP[t] = !R2MAP[t];
+		n = RotateNeighborhoodCW(n);
+	}
+}

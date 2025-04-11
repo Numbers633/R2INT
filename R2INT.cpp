@@ -83,7 +83,7 @@ int main() {
     Neighborhood  editorNeighborhood;
     for (int i = 0; i < 25; i++)
     {
-        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
+        editorNeighborhood[i] = i == 23 ? 1 : 0; //rnd(gen) > 4 ? 1 : 0;
     }
 
     // Colors for multistate rules
@@ -134,8 +134,6 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
-                
-
                 // Check if the mouse position is within the bounds of the menu text
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
                 if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
@@ -248,6 +246,15 @@ int main() {
                     secondWindow->close();
                     secondWindow.reset();  // Properly close and delete the second window
                     break;
+                }
+                else if (secondEvent->is<sf::Event::MouseButtonPressed>()) {
+                    // Check if the mouse position is within the bounds of the menu text
+                    sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+                    if (mousePosition.x >= 720)
+                    {
+#pragma message("Warning: Currently, toggling works only for non-isotropic rules")
+                        globalRule.ToggleIsotropicTransition(editorNeighborhood);
+                    }
                 }
                 else if (secondEvent->is<sf::Event::KeyPressed>()) {
                     sf::Keyboard::Key keyPress = secondEvent->getIf<sf::Event::KeyPressed>()->code;

@@ -39,9 +39,10 @@ struct Neighborhood {
 
 // R2INT data structure
 // Data is stored in a non-isotropic table
-struct R2INTRules {
+class R2INTRules {
+public:
 	bool R2MAP[33554432] = { false };
-
+	void ToggleIsotropicTransition(Neighborhood n);
 	bool& operator[](int Index) {  // Now returns a modifiable reference
 		return R2MAP[Index];
 	}
