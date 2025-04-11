@@ -75,9 +75,15 @@ int main() {
 
     sf::Clock clock;
     int frameCount = 0;
+    int generation = 0;
     float elapsedTime = 0.0f;
 
     float cellSize = 4.f;
+    int n_states = 2;
+
+    // Edit variables
+    bool isMouseDown = false;
+    int drawingState = 0;
     
     // Variables for the rule editor
     Neighborhood  editorNeighborhood;
@@ -134,7 +140,23 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
-                // Check if the mouse position is within the bounds of the menu text
+                if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right)
+                {
+                    isMouseDown = true;
+
+                    sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+                    sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
+
+                    float x = mouseWorldPos.x;
+                    float y = mouseWorldPos.y - 50.f;
+
+                    int i = static_cast<int>(x / cellSize);
+                    int j = static_cast<int>(y / cellSize);
+
+                    if (i >= 0 && i < GRID_DIMENSIONS && j >= 0 && j < GRID_DIMENSIONS) {
+                        drawingState = (currentGrid.Grid[i][j] + 1) % n_states;
+                    }
+                }
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
                 if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
                     if (!secondWindow) {
@@ -142,11 +164,16 @@ int main() {
                     }
                 }
             }
+            else if (event->is<sf::Event::MouseButtonReleased>()) {
+                if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
+                    isMouseDown = false;
+            }
             else if (event->is<sf::Event::KeyPressed>()) {
                 sf::Keyboard::Key keyPress = event->getIf<sf::Event::KeyPressed>()->code;
                 if (keyPress == sf::Keyboard::Key::R)
                 {
                     currentGrid = originalGrid;
+                    generation = 0;
                     isPlaying = false;
                 }
                 else if (keyPress == sf::Keyboard::Key::Equal)
@@ -192,6 +219,7 @@ int main() {
 
         // Process the grid update at a fixed timestep
         while (accumulator >= timeStep) {
+            generation++;
             currentGrid.Simulate(globalRule);
             accumulator -= timeStep;
         }
@@ -200,14 +228,36 @@ int main() {
         elapsedTime += deltaTime;
         frameCount++;
 
-        if (elapsedTime >= 4.f)
+        if (elapsedTime >= 10.f)
         {
-            std::cout << "FPS: " << frameCount / 4.f << std::endl;
+            std::cout << "FPS: " << frameCount / 10.f << std::endl;
             elapsedTime = 0.0f;
             frameCount = 0;
         }
 
         window.clear(sf::Color::Black);
+
+        if (isMouseDown) {
+            sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+            sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
+
+            // Subtract vertical offset (50)
+            float x = mouseWorldPos.x;
+            float y = mouseWorldPos.y - 50.f;
+
+            int i = static_cast<int>(x / cellSize);
+            int j = static_cast<int>(y / cellSize);
+
+            if (i >= 0 && i < GRID_DIMENSIONS && j >= 0 && j < GRID_DIMENSIONS) {
+                if (generation == 0)
+                {
+                    originalGrid.Grid[i][j] = drawingState; // Set to alive
+                    originalGrid.OldGrid[i][j] = drawingState;
+                }
+                currentGrid.Grid[i][j] = drawingState;
+                currentGrid.OldGrid[i][j] = drawingState;
+            }
+        }
 
         sf::VertexArray grid(sf::PrimitiveType::Triangles, GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
 
