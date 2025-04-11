@@ -87,7 +87,7 @@ void Grid64::Simulate(const R2INTRules &Rules) {
 
     for (int y = 0; y < GRID_DIMENSIONS; y++) {
         for (int x = 0; x < GRID_DIMENSIONS; x++) {
-            int NeighborhoodBias = 16777216;
+            int NeighborhoodWeight = 16777216;
             int R2INT = 0;
             bool Void = false;
 
@@ -99,8 +99,8 @@ void Grid64::Simulate(const R2INTRules &Rules) {
                     if (nx >= 0 && nx < GRID_DIMENSIONS && ny >= 0 && ny < GRID_DIMENSIONS) {
                         CellState = OldGrid[nx][ny];
                     }
-                    R2INT += CellState * NeighborhoodBias;
-                    NeighborhoodBias /= 2;
+                    R2INT += CellState * NeighborhoodWeight;
+                    NeighborhoodWeight /= 2;
                 }
             }
 

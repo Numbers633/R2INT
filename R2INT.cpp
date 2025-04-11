@@ -61,6 +61,13 @@ int main() {
     Grid64 originalGrid = currentGrid;
     std::cout << "Initialize grid complete!" << std::endl;
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> rnd(0, 7);
+
+    //
+    // Playback variables
+    //
     bool isPlaying = false;
     
     float timeStep = 1.0f / 60.0f;  // 60 updates per second
@@ -71,7 +78,15 @@ int main() {
     float elapsedTime = 0.0f;
 
     float cellSize = 4.f;
+    
+    // Variables for the rule editor
+    Neighborhood  editorNeighborhood;
+    for (int i = 0; i < 25; i++)
+    {
+        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
+    }
 
+    // Colors for multistate rules
     sf::Color colors[11];
     colors[0] = sf::Color::Black;
     colors[1] = sf::Color::White;
@@ -84,6 +99,12 @@ int main() {
     colors[8] = sf::Color(127, 255, 255, 255);
     colors[9] = sf::Color(255, 127, 255, 255);
     colors[10] = sf::Color(255, 255, 127, 255);
+
+    sf::Color ruleEditorColors[4];
+    ruleEditorColors[0] = sf::Color::Color(0, 64, 32);
+    ruleEditorColors[1] = sf::Color::Color(224, 255, 240);
+    ruleEditorColors[2] = sf::Color::Color(0, 255, 240);
+    ruleEditorColors[3] = sf::Color::Color(224, 64, 240);
 
     sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
@@ -98,10 +119,6 @@ int main() {
     sf::Text menuText(font, "Open Rule Editor", 24);
     menuText.setPosition({ 10, 10 });
     menuText.setFillColor(sf::Color::White);
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> rnd(0, 7);
 
     sf::View view;
     view.setSize(static_cast<sf::Vector2f>(window.getSize()));
@@ -136,11 +153,23 @@ int main() {
                 }
                 else if (keyPress == sf::Keyboard::Key::Equal)
                 {
-                    cellSize *= 2;
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift) ||
+                        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
+                        timeStep /= 1.18920711f; // 4th root of 2
+                    }
+                    else {
+                        cellSize *= 2;
+                    }
                 }
                 else if (keyPress == sf::Keyboard::Key::Hyphen)
                 {
-                    cellSize /= 2;
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift) ||
+                        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
+                        timeStep *= 1.18920711f; // 4th root of 2
+                    }
+                    else {
+                        cellSize /= 2;
+                    }
                 }
                 else if (keyPress == sf::Keyboard::Key::Enter)
                 {
@@ -220,24 +249,27 @@ int main() {
                     secondWindow.reset();  // Properly close and delete the second window
                     break;
                 }
+                else if (secondEvent->is<sf::Event::KeyPressed>()) {
+                    sf::Keyboard::Key keyPress = secondEvent->getIf<sf::Event::KeyPressed>()->code;
+                    if (keyPress == sf::Keyboard::Key::R)
+                    {
+                        for (int i = 0; i < 25; i++)
+                        {
+                            editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
+                        }
+                    }
+                }
             }
 
             if (secondWindow)
             {
-                secondWindow->clear(sf::Color::Color(0, 170, 85, 255));
+                secondWindow->clear(sf::Color::Color(0, 160, 80, 240));
                 sf::RectangleShape rc;
                 for (int i = 0; i < 5; i++)
                 {
                     for (int j = 0; j < 5; j++)
                     {
-                        if (rnd(gen) >= 4)
-                        {
-                            rc.setFillColor(sf::Color::Color(0, 64, 32));
-                        }
-                        else
-                        {
-                            rc.setFillColor(sf::Color::Color(224, 255, 240));
-                        }
+                        rc.setFillColor(ruleEditorColors[editorNeighborhood[5*i + j]]);
                         rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
                         rc.setSize({ 128.f, 128.f });
                         secondWindow->draw(rc);

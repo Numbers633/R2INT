@@ -66,14 +66,14 @@ inline Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs)
 int ConvertNeighborhoodToInt(const Neighborhood& EvalVector)
 {
 	int EvalResult = 0;
-	int NeighborhoodBias = 16777216;
+	int NeighborhoodWeight = 16777216;
 	int id = 0;
 
-	while (NeighborhoodBias >= 1)
+	while (NeighborhoodWeight >= 1)
 	{
-		EvalResult += EvalVector[id] * NeighborhoodBias;
+		EvalResult += EvalVector[id] * NeighborhoodWeight;
 
-		NeighborhoodBias /= 2;
+		NeighborhoodWeight /= 2;
 		id++;
 	}
 
@@ -93,18 +93,18 @@ Neighborhood ConvertIntToNeighborhood(int EvalNumber)
 inline Neighborhood GetNeighborhoodFromInt(int EvalTransition)
 {
 	Neighborhood EvalResult{};
-	int NeighborhoodBias = 16777216; // half of the neighborhood possibilities
+	int NeighborhoodWeight = 16777216; // half of the neighborhood possibilities
 
-	NeighborhoodBias = 16777216;
+	NeighborhoodWeight = 16777216;
 
 	for (int i = 0; i < 25; i++) {
-		if (EvalTransition >= NeighborhoodBias)
+		if (EvalTransition >= NeighborhoodWeight)
 		{
-			EvalTransition -= NeighborhoodBias;
+			EvalTransition -= NeighborhoodWeight;
 			EvalResult[i] = 1;
 		}
 
-		NeighborhoodBias /= 2;
+		NeighborhoodWeight /= 2;
 	}
 
 	return EvalResult;
