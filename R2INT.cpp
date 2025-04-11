@@ -256,6 +256,12 @@ int main() {
                     if (mouseWindowCoords.x >= 720.f) {
                         globalRule.ToggleIsotropicTransition(editorNeighborhood);
                     }
+                    else
+                    {
+                        int modifyID = floor(mouseWindowCoords.x / 144) + 5 * floor(mouseWindowCoords.y / 144);
+                        std::cout << modifyID << std::endl;
+                        editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
+                    }
                 }
                 else if (secondEvent->is<sf::Event::KeyPressed>()) {
                     sf::Keyboard::Key keyPress = secondEvent->getIf<sf::Event::KeyPressed>()->code;
