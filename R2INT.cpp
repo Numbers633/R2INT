@@ -26,12 +26,12 @@ void InitializeRule()
     {
         Neighborhood n = ConvertIntToNeighborhood(i);
         globalRule[i] = 0;
-        // Jellyfish (R2,C2,S4-8,17-20,B7-8,10,16) from R2INT's Rule Collection
-        int8_t neighbors = n.countOuterCells();
+        // Conway's Game of Life (B3/S23)
+        int8_t neighbors = n[6] + n[7] + n[8] + n[11] + n[13] + n[16] + n[17] + n[18];
         if (n[12] == 0)
         {
             // Dead
-            if (neighbors == 7 || neighbors == 8 || neighbors==10 || neighbors == 16)
+            if (neighbors == 3)
             {
                 globalRule[i] = 1;
             }
@@ -39,7 +39,7 @@ void InitializeRule()
         else
         {
             // Alive
-            if ((neighbors >= 4 && neighbors <= 8) || (neighbors >= 17 && neighbors <= 20))
+            if (neighbors == 2 || neighbors == 3)
             {
                 globalRule[i] = 1;
             }
@@ -83,7 +83,7 @@ int main() {
     Neighborhood  editorNeighborhood;
     for (int i = 0; i < 25; i++)
     {
-        editorNeighborhood[i] = i == 23 ? 1 : 0; //rnd(gen) > 4 ? 1 : 0;
+        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
     }
 
     // Colors for multistate rules
@@ -252,7 +252,6 @@ int main() {
                     sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
                     if (mousePosition.x >= 720)
                     {
-#pragma message("Warning: Currently, toggling works only for non-isotropic rules")
                         globalRule.ToggleIsotropicTransition(editorNeighborhood);
                     }
                 }
@@ -276,7 +275,7 @@ int main() {
                 {
                     for (int j = 0; j < 5; j++)
                     {
-                        rc.setFillColor(ruleEditorColors[editorNeighborhood[5*i + j]]);
+                        rc.setFillColor(ruleEditorColors[editorNeighborhood[5*j + i]]);
                         rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
                         rc.setSize({ 128.f, 128.f });
                         secondWindow->draw(rc);

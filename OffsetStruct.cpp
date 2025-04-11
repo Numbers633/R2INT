@@ -214,10 +214,11 @@ bool ApplyRules(Neighborhood Transition, const R2INTRules& rules) {
 
 void R2INTRules::ToggleIsotropicTransition(Neighborhood n)
 {
+	int newTransition = 1 - R2MAP[ConvertNeighborhoodToInt(n)];
 	for (int i = 0; i < 4; i++)
 	{
 		int t = ConvertNeighborhoodToInt(n);
-		R2MAP[t] = !R2MAP[t];
+		R2MAP[t] = newTransition;
 		n = RotateNeighborhoodCW(n);
 	}
 
@@ -226,7 +227,7 @@ void R2INTRules::ToggleIsotropicTransition(Neighborhood n)
 	for (int i = 0; i < 4; i++)
 	{
 		int t = ConvertNeighborhoodToInt(n);
-		R2MAP[t] = !R2MAP[t];
+		R2MAP[t] = newTransition;
 		n = RotateNeighborhoodCW(n);
 	}
 }
