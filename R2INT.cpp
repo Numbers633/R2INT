@@ -61,6 +61,8 @@ int main() {
     Grid64 originalGrid = currentGrid;
     std::cout << "Initialize grid complete!" << std::endl;
 
+    bool isPlaying = false;
+    
     float timeStep = 1.0f / 60.0f;  // 60 updates per second
     float accumulator = 0.0f;
 
@@ -130,6 +132,7 @@ int main() {
                 if (keyPress == sf::Keyboard::Key::R)
                 {
                     currentGrid = originalGrid;
+                    isPlaying - false;
                 }
                 else if (keyPress == sf::Keyboard::Key::Equal)
                 {
@@ -138,6 +141,10 @@ int main() {
                 else if (keyPress == sf::Keyboard::Key::Hyphen)
                 {
                     cellSize /= 2;
+                }
+                else if (keyPress == sf::Keyboard::Key::Enter)
+                {
+                    isPlaying = !isPlaying;
                 }
             }
             else if (event->is<sf::Event::Resized>()) {
@@ -148,7 +155,7 @@ int main() {
         }
 
         float deltaTime = clock.restart().asSeconds();
-        accumulator += deltaTime;
+        accumulator += deltaTime * (isPlaying ? 1 : 0);
         elapsedTime += deltaTime;
 
         // Process the grid update at a fixed timestep
