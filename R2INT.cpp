@@ -140,7 +140,7 @@ int main() {
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
                 if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
                     if (!secondWindow) {
-                        secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1280, 720 }), "R2INT - Rule Editor");
+                        secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1440, 720 }), "R2INT - Rule Editor");
                     }
                 }
             }
@@ -275,6 +275,14 @@ int main() {
                         secondWindow->draw(rc);
                     }
                 }
+
+                int TransitionID = ConvertNeighborhoodToInt(editorNeighborhood);
+                rc.setFillColor(ruleEditorColors[globalRule[TransitionID]]);
+
+                rc.setPosition({ 976.f + 8.f, 252.f + 8.f });
+                rc.setSize({ 192.f, 192.f });
+                secondWindow->draw(rc);
+
                 secondWindow->display();
             }
         }
