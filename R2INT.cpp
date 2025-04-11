@@ -132,7 +132,7 @@ int main() {
                 if (keyPress == sf::Keyboard::Key::R)
                 {
                     currentGrid = originalGrid;
-                    isPlaying - false;
+                    isPlaying = false;
                 }
                 else if (keyPress == sf::Keyboard::Key::Equal)
                 {
@@ -145,6 +145,11 @@ int main() {
                 else if (keyPress == sf::Keyboard::Key::Enter)
                 {
                     isPlaying = !isPlaying;
+                }
+                else if (keyPress == sf::Keyboard::Key::Space)
+                {
+                    accumulator += timeStep;
+                    isPlaying = false;
                 }
             }
             else if (event->is<sf::Event::Resized>()) {
