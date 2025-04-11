@@ -68,6 +68,8 @@ int main() {
     int frameCount = 0;
     float elapsedTime = 0.0f;
 
+    float cellSize = 4.f;
+
     sf::Color colors[11];
     colors[0] = sf::Color::Black;
     colors[1] = sf::Color::White;
@@ -124,10 +126,18 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::KeyPressed>()) {
-                if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::R)
+                sf::Keyboard::Key keyPress = event->getIf<sf::Event::KeyPressed>()->code;
+                if (keyPress == sf::Keyboard::Key::R)
                 {
-                    std::cout << "Reset!" << std::endl;
                     currentGrid = originalGrid;
+                }
+                else if (keyPress == sf::Keyboard::Key::Equal)
+                {
+                    cellSize *= 2;
+                }
+                else if (keyPress == sf::Keyboard::Key::Hyphen)
+                {
+                    cellSize /= 2;
                 }
             }
             else if (event->is<sf::Event::Resized>()) {
@@ -151,9 +161,9 @@ int main() {
         elapsedTime += deltaTime;
         frameCount++;
 
-        if (elapsedTime >= 1.f)
+        if (elapsedTime >= 4.f)
         {
-            std::cout << "FPS: " << frameCount << std::endl;
+            std::cout << "FPS: " << frameCount / 4.f << std::endl;
             elapsedTime = 0.0f;
             frameCount = 0;
         }
@@ -161,8 +171,6 @@ int main() {
         window.clear(sf::Color::Black);
 
         sf::VertexArray grid(sf::PrimitiveType::Triangles, GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
-
-        int cellSize = 4;
 
         for (int i = 0; i < GRID_DIMENSIONS; i++) {
             for (int j = 0; j < GRID_DIMENSIONS; j++) {
