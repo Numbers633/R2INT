@@ -251,15 +251,12 @@ int main() {
                     sf::Vector2i pixelPos = sf::Mouse::getPosition(*secondWindow);
                     sf::Vector2f mouseWindowCoords = secondWindow->mapPixelToCoords(pixelPos, secondWindow->getDefaultView());
 
-                    std::cout << "Mouse X: " << mouseWindowCoords.x << ", Y: " << mouseWindowCoords.y << std::endl;
-
                     if (mouseWindowCoords.x >= 720.f) {
                         globalRule.ToggleIsotropicTransition(editorNeighborhood);
                     }
                     else
                     {
                         int modifyID = floor(mouseWindowCoords.x / 144) + 5 * floor(mouseWindowCoords.y / 144);
-                        std::cout << modifyID << std::endl;
                         editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
                     }
                 }
