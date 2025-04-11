@@ -82,7 +82,6 @@ int main() {
     int n_states = 2;
 
     // Edit variables
-    bool isMouseDown = false;
     int drawingState = 0;
     
     // Variables for the rule editor
@@ -115,6 +114,13 @@ int main() {
     sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
 
+    // Camera variables
+    sf::Vector2f previousMousePosition;
+    sf::Vector2i worldPrevious;
+
+    bool isRightMouseDown = false;
+    bool isLeftMouseDown = false;
+
     // Load font
     sf::Font font;
     if (!font.openFromFile("arial.ttf")) {
@@ -142,7 +148,7 @@ int main() {
             else if (event->is<sf::Event::MouseButtonPressed>()) {
                 if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right)
                 {
-                    isMouseDown = true;
+                    isRightMouseDown = true;
 
                     sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
                     sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
@@ -157,6 +163,12 @@ int main() {
                         drawingState = (currentGrid.Grid[i][j] + 1) % n_states;
                     }
                 }
+                else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
+                {
+                    window.setView(view);
+                    isLeftMouseDown = true;
+                    previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+                }
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
                 if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
                     if (!secondWindow) {
@@ -166,7 +178,13 @@ int main() {
             }
             else if (event->is<sf::Event::MouseButtonReleased>()) {
                 if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
-                    isMouseDown = false;
+                {
+                    isRightMouseDown = false;
+                }
+                else if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Left)
+                {
+                    isLeftMouseDown = false;
+                }
             }
             else if (event->is<sf::Event::KeyPressed>()) {
                 sf::Keyboard::Key keyPress = event->getIf<sf::Event::KeyPressed>()->code;
@@ -237,7 +255,7 @@ int main() {
 
         window.clear(sf::Color::Black);
 
-        if (isMouseDown) {
+        if (isRightMouseDown) {
             sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
             sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
 
@@ -257,6 +275,15 @@ int main() {
                 currentGrid.Grid[i][j] = drawingState;
                 currentGrid.OldGrid[i][j] = drawingState;
             }
+        }
+        if (isLeftMouseDown) {
+            window.setView(view);  // Use current view for mapping
+
+            sf::Vector2f currentMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            sf::Vector2f delta = previousMousePosition - currentMousePosition;
+            view.move(delta);
+            window.setView(view);
+            previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));  // <== Update after view.move
         }
 
         sf::VertexArray grid(sf::PrimitiveType::Triangles, GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
@@ -286,8 +313,14 @@ int main() {
             }
         }
 
+        window.setView(view);
         window.draw(grid);
+
+        // Draw the menu with the default (fixed) view
+        window.setView(window.getDefaultView());
         window.draw(menuText);
+
+        // Present the frame
         window.display();
 
         if (secondWindow && secondWindow->isOpen()) {
