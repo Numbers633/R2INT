@@ -248,10 +248,12 @@ int main() {
                     break;
                 }
                 else if (secondEvent->is<sf::Event::MouseButtonPressed>()) {
-                    // Check if the mouse position is within the bounds of the menu text
-                    sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-                    if (mousePosition.x >= 720)
-                    {
+                    sf::Vector2i pixelPos = sf::Mouse::getPosition(*secondWindow);
+                    sf::Vector2f mouseWindowCoords = secondWindow->mapPixelToCoords(pixelPos, secondWindow->getDefaultView());
+
+                    std::cout << "Mouse X: " << mouseWindowCoords.x << ", Y: " << mouseWindowCoords.y << std::endl;
+
+                    if (mouseWindowCoords.x >= 720.f) {
                         globalRule.ToggleIsotropicTransition(editorNeighborhood);
                     }
                 }
