@@ -136,6 +136,8 @@ int main() {
     view.setSize(static_cast<sf::Vector2f>(window.getSize()));
     view.setCenter({ view.getSize().x / 2 , view.getSize().y / 2});
 
+    sf::View uiView;
+
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
             if (event->is<sf::Event::Closed>()) {
@@ -200,20 +202,20 @@ int main() {
                 {
                     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift) ||
                         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
-                        timeStep /= 1.18920711f; // 4th root of 2
+                        timeStep /= 1.18920711f; // Keep this
                     }
                     else {
-                        cellSize *= 2;
+                        view.zoom(0.5f); // Zoom IN (scale down view size)
                     }
                 }
                 else if (keyPress == sf::Keyboard::Key::Hyphen)
                 {
                     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LShift) ||
                         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::RShift)) {
-                        timeStep *= 1.18920711f; // 4th root of 2
+                        timeStep *= 1.18920711f; // Keep this
                     }
                     else {
-                        cellSize /= 2;
+                        view.zoom(2.0f); // Zoom OUT (scale up view size)
                     }
                 }
                 else if (keyPress == sf::Keyboard::Key::Enter)
@@ -227,9 +229,16 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::Resized>()) {
-                view.setSize(static_cast<sf::Vector2f>(window.getSize()));
-                view.setCenter({ view.getSize().x / 2 , view.getSize().y / 2 });
-                window.setView(view);
+                // Update the view to match new window size, keeping the same center
+                sf::Vector2u newSize = window.getSize();
+                sf::Vector2f newSizef(static_cast<sf::Vector2f>(newSize));
+
+                // Update world view
+                view.setSize(newSizef); // Keeps zoom scale constant
+
+                // Update UI view to match pixel coords (top-left = (0,0), bottom-right = (width, height))
+                uiView.setSize(newSizef);
+                uiView.setCenter(newSizef * 0.5f);
             }
         }
 
@@ -315,11 +324,12 @@ int main() {
             }
         }
 
+        // Draw world
         window.setView(view);
         window.draw(grid);
 
-        // Draw the menu with the default (fixed) view
-        window.setView(window.getDefaultView());
+        // Draw UI
+        window.setView(uiView);
         window.draw(menuText);
 
         // Present the frame
