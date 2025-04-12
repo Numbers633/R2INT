@@ -183,6 +183,7 @@
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="OffsetStruct.h" />
     <ClInclude Include="R2INT.h" />
+    <ClInclude Include="R2INT_File.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="targetver.h" />
@@ -191,6 +192,7 @@
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="OffsetStruct.cpp" />
     <ClCompile Include="R2INT.cpp" />
+    <ClCompile Include="R2INT_File.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Conditions.rc" />

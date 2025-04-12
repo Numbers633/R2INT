@@ -1,11 +1,14 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include <array>
 #include <random>
 #include <iostream>
 #include <filesystem>
+#include <string>
 
-#include "OffsetStruct.h"
 #include "Grid.h"
+#include "OffsetStruct.h"
+#include "R2INT_File.h"
 
 R2INTRules globalRule;
 
@@ -336,9 +339,12 @@ int main() {
         window.display();
 
         if (secondWindow && secondWindow->isOpen()) {
-            sf::Text clearText(font, "Clear Rule", 24);
+            sf::Text clearText(font, "Clear Rule", 48);
             clearText.setPosition({ 730, 10 });
             clearText.setFillColor(sf::Color::Black);
+            sf::Text saveText(font, "Save Rule", 48);
+            saveText.setPosition({ 730, 670 });
+            saveText.setFillColor(sf::Color::Black);
             while (const std::optional secondEvent = secondWindow->pollEvent()) {
                 if (secondEvent->is<sf::Event::Closed>()) {
                     secondWindow->close();
@@ -350,7 +356,6 @@ int main() {
                     sf::Vector2f mouseWindowCoords = secondWindow->mapPixelToCoords(pixelPos, secondWindow->getDefaultView());
 
                     if (mouseWindowCoords.x >= 720.f) {
-                        globalRule.ToggleIsotropicTransition(editorNeighborhood);
                         if (clearText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos))) {
                             for (unsigned int i = 0; i < 33554432; i++)
                             {
@@ -361,6 +366,14 @@ int main() {
                                     std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
                                 }
                             }
+                        }
+                        else if (saveText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos)))
+                        {
+                            SaveTor2intFile(globalRule);
+                        }
+                        else
+                        {
+                            globalRule.ToggleIsotropicTransition(editorNeighborhood);
                         }
                     }
                     else
@@ -411,6 +424,7 @@ int main() {
                 rc.setSize({ 192.f, 192.f });
                 secondWindow->draw(rc);
                 secondWindow->draw(clearText);
+                secondWindow->draw(saveText);
                 secondWindow->display();
             }
         }
