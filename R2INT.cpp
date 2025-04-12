@@ -326,6 +326,9 @@ int main() {
         window.display();
 
         if (secondWindow && secondWindow->isOpen()) {
+            sf::Text clearText(font, "Clear Rule", 24);
+            clearText.setPosition({ 730, 10 });
+            clearText.setFillColor(sf::Color::Black);
             while (const std::optional secondEvent = secondWindow->pollEvent()) {
                 if (secondEvent->is<sf::Event::Closed>()) {
                     secondWindow->close();
@@ -338,6 +341,17 @@ int main() {
 
                     if (mouseWindowCoords.x >= 720.f) {
                         globalRule.ToggleIsotropicTransition(editorNeighborhood);
+                        if (clearText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos))) {
+                            for (unsigned int i = 0; i < 33554432; i++)
+                            {
+                                Neighborhood n = ConvertIntToNeighborhood(i);
+                                globalRule[i] = 0;
+                                if (i % PERCENT_INCREMENT == PERCENT_INCREMENT - 1)
+                                {
+                                    std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -386,7 +400,7 @@ int main() {
                 rc.setPosition({ 976.f + 8.f, 252.f + 8.f });
                 rc.setSize({ 192.f, 192.f });
                 secondWindow->draw(rc);
-
+                secondWindow->draw(clearText);
                 secondWindow->display();
             }
         }
