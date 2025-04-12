@@ -40,7 +40,7 @@ void SaveTor2intFile(R2INTRules& saveRule)
 	
 	std::cout << "Saving to " << saveName << std::endl;
 
-	for (int i = 0; i < 4096; i++)
+	for (int i = 0; i < 33554432; i++)
 	{
 		if (FindLowestNeighborhoodValue(i) != i)
 		{
