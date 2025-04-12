@@ -174,6 +174,8 @@ int main() {
                     if (!secondWindow) {
                         secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1440, 720 }), "R2INT - Rule Editor");
                     }
+                    isLeftMouseDown = false;
+                    isRightMouseDown = false;
                 }
             }
             else if (event->is<sf::Event::MouseButtonReleased>()) {
@@ -363,7 +365,15 @@ int main() {
                 {
                     for (int j = 0; j < 5; j++)
                     {
-                        rc.setFillColor(ruleEditorColors[editorNeighborhood[5*j + i]]);
+                        if (i == 2 && j == 2)
+                        {
+                            rc.setFillColor(colors[editorNeighborhood[5 * j + i]]);
+                        }
+                        else
+                        {
+                            rc.setFillColor(ruleEditorColors[editorNeighborhood[5 * j + i]]);
+                        }
+                        
                         rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
                         rc.setSize({ 128.f, 128.f });
                         secondWindow->draw(rc);
