@@ -48,7 +48,10 @@ void SaveTor2intFile(R2INTRules& saveRule)
 		}
 		if (saveRule.R2MAP[i] == true)
 		{
-			std::cout << i << ": True" << std::endl;
+			Neighborhood n = ConvertIntToNeighborhood(i);
+			std::cout << n[12] << n[7] << n[8] << n[13] << n[18] << n[17] << n[16] << n[11] << n[6];
+			std::cout << n[2] << n[3] << n[4] << n[9] << n[14] << n[19] << n[24] << n[23] << n[22];
+			std::cout << n[21] << n[20] << n[15] << n[10] << n[5] << n[0] << std::endl;
 		}
 	}
 }
