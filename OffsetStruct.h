@@ -48,11 +48,13 @@ public:
 	}
 };
 
-// Rotation functiond
+// Rotation functions
 inline Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs);
 inline Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs);
 inline Neighborhood MirrorNeighborhoodHorizontally(const Neighborhood& lhs);
 inline Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs);
+// Shifting functions
+Neighborhood ShiftNeighborhood(const Neighborhood& lhs, int dx, int dy);
 // Conversion functions
 int ConvertNeighborhoodToInt(const Neighborhood& EvalVector);
 inline Neighborhood ConvertIntToNeighborhood(int EvalNumber);

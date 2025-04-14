@@ -12,9 +12,10 @@
 
 R2INTRules globalRule;
 
-#define PERCENT_INCREMENT 8388608
 #ifdef _DEBUG
 #define PERCENT_INCREMENT 2097152
+#else
+#define PERCENT_INCREMENT 8388608
 #endif
 
 void InitializeRule()
@@ -390,6 +391,22 @@ int main() {
                         {
                             editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
                         }
+                    }
+                    else if (keyPress == sf::Keyboard::Key::Left)
+                    {
+                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, -1, 0);
+                    }
+                    else if (keyPress == sf::Keyboard::Key::Right)
+                    {
+                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 1, 0);
+                    }
+                    else if (keyPress == sf::Keyboard::Key::Up)
+                    {
+                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 0, -1);
+                    }
+                    else if (keyPress == sf::Keyboard::Key::Down)
+                    {
+                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 0, 1);
                     }
                 }
             }

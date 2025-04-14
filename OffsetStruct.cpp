@@ -59,6 +59,31 @@ inline Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs)
 
 	return ret;
 }
+//
+// Shift the neighborhood, useful for creating rules
+//
+
+Neighborhood ShiftNeighborhood(const Neighborhood& lhs, int dx, int dy)
+{
+	Neighborhood ret{};
+	for (int y = 0; y < 5; ++y)
+	{
+		for (int x = 0; x < 5; ++x)
+		{
+			int fromX = x - dx;
+			int fromY = y - dy;
+			int fromIndex = fromX + 5 * fromY;
+			int toIndex = x + 5 * y;
+			if (fromX < 0 || fromX > 4 || fromY < 0 || fromY > 4)
+			{
+				ret[toIndex] = 0;
+				continue;
+			}
+			ret[toIndex] = lhs[fromIndex];
+		}
+	}
+	return ret;
+}
 
 //
 // Code to convert between R2INT neighborhood and integer data
