@@ -40,8 +40,8 @@ Grid64::Grid64() {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> rnd(0, 100);
     sf::Rect<int> rc;
-    rc.position = sf::Vector2i(50, 50);
-    rc.size = sf::Vector2i(101, 101);
+    rc.position = sf::Vector2i(48, 48);
+    rc.size = sf::Vector2i(32, 32);
     RandomizeRect(rc, false, gen, rnd);
 }
 
@@ -134,4 +134,39 @@ static bool operator!=(Grid64 lhs, Grid64 rhs)
     if (lhs.Grid != rhs.Grid)
         return false;
     return true;
+}
+
+//
+// World class implementation
+//
+ 
+World::World() {
+    contents.resize(1); // Start with one default Grid64
+}
+
+void World::Simulate(const R2INTRules& Rules)
+{
+    for (Grid64& grid : contents)
+    {
+        grid.Simulate(Rules);
+    }
+}
+
+void World::PaintAtCell(sf::Vector2i p, int newState)
+{
+    if (p.x >= 0 && p.x < GRID_DIMENSIONS && p.y >= 0 && p.y < GRID_DIMENSIONS)
+    {
+        contents[0].Grid[p.x][p.y] = newState;
+        contents[0].OldGrid[p.x][p.y] = newState;
+    }
+}
+
+__int8 World::GetCellStateAt(sf::Vector2i p)
+{
+    if (p.x >= 0 && p.x < GRID_DIMENSIONS && p.y >= 0 && p.y < GRID_DIMENSIONS)
+    {
+        return contents[0].Grid[p.x][p.y];
+    }
+
+    return 0; // Replace with the current background state;
 }

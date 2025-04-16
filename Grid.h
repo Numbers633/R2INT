@@ -4,7 +4,7 @@
 #include <random>
 #include "OffsetStruct.h"
 
-#define GRID_DIMENSIONS 200
+#define GRID_DIMENSIONS 128
 
 // Direction numbers
 #define DIRECTION_SOUTHWEST 0
@@ -40,4 +40,15 @@ struct Grid64 {
 	// Simulation
 	void Simulate(const R2INTRules& Rules);
 	void ResetOld();
+};
+
+struct World {
+	std::vector<Grid64> contents;
+
+	World();
+
+	void Simulate(const R2INTRules& Rules);
+	void PaintAtCell(sf::Vector2i p, int newState);
+
+	__int8 GetCellStateAt(sf::Vector2i p);
 };

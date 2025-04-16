@@ -61,8 +61,8 @@ int main() {
     InitializeRule();
     std::cout << "Initializing rule complete." << std::endl;
     std::cout << "Initializing grid..." << std::endl;
-    Grid64 currentGrid;
-    Grid64 originalGrid = currentGrid;
+    World currentWorld;
+    World originalWorld = currentWorld;
     std::cout << "Initialize grid complete!" << std::endl;
 
     std::random_device rd;
@@ -166,7 +166,7 @@ int main() {
                     int j = static_cast<int>(y / cellSize);
 
                     if (i >= 0 && i < GRID_DIMENSIONS && j >= 0 && j < GRID_DIMENSIONS) {
-                        drawingState = (currentGrid.Grid[i][j] + 1) % n_states;
+                        drawingState = (currentWorld.GetCellStateAt({i,j}) + 1) % n_states;
                     }
                 }
                 else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
@@ -198,7 +198,7 @@ int main() {
                 sf::Keyboard::Key keyPress = event->getIf<sf::Event::KeyPressed>()->code;
                 if (keyPress == sf::Keyboard::Key::R)
                 {
-                    currentGrid = originalGrid;
+                    currentWorld = originalWorld;
                     generation = 0;
                     isPlaying = false;
                 }
@@ -253,7 +253,7 @@ int main() {
         // Process the grid update at a fixed timestep
         while (accumulator >= timeStep) {
             generation++;
-            currentGrid.Simulate(globalRule);
+            currentWorld.Simulate(globalRule);
             accumulator -= timeStep;
         }
 
@@ -281,15 +281,11 @@ int main() {
             int i = static_cast<int>(x / cellSize);
             int j = static_cast<int>(y / cellSize);
 
-            if (i >= 0 && i < GRID_DIMENSIONS && j >= 0 && j < GRID_DIMENSIONS) {
-                if (generation == 0)
-                {
-                    originalGrid.Grid[i][j] = drawingState; // Set to alive
-                    originalGrid.OldGrid[i][j] = drawingState;
-                }
-                currentGrid.Grid[i][j] = drawingState;
-                currentGrid.OldGrid[i][j] = drawingState;
+            if (generation == 0)
+            {
+                originalWorld.PaintAtCell({ i, j },drawingState);
             }
+            currentWorld.PaintAtCell({ i, j }, drawingState);
         }
         if (isLeftMouseDown) {
             window.setView(view);  // Use current view for mapping
@@ -303,13 +299,14 @@ int main() {
 
         sf::VertexArray grid(sf::PrimitiveType::Triangles, GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
 
+        // Soon to be moved to World class
         for (int i = 0; i < GRID_DIMENSIONS; i++) {
             for (int j = 0; j < GRID_DIMENSIONS; j++) {
                 int index = (i * GRID_DIMENSIONS + j) * 6;
                 float x = i * cellSize;
                 float y = j * cellSize + 50;
 
-                sf::Color color = colors[currentGrid.Grid[i][j]];
+                sf::Color color = colors[currentWorld.GetCellStateAt({ i,j })];
 
                 // First Triangle (Bottom-left, Top-left, Top-right)
                 grid[index].position = { x, y };
