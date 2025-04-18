@@ -253,6 +253,7 @@ int main() {
         // Process the grid update at a fixed timestep
         while (accumulator >= timeStep) {
             generation++;
+            currentWorld.LinkAllNeighbors();
             currentWorld.Simulate(globalRule);
             accumulator -= timeStep;
         }
@@ -297,37 +298,52 @@ int main() {
             previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));  // <== Update after view.move
         }
 
-        sf::VertexArray grid(sf::PrimitiveType::Triangles, GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
+        // Calculate the total number of grids to draw
+        size_t totalGrids = currentWorld.contents.size();
 
-        // Soon to be moved to World class
-        for (int i = 0; i < GRID_DIMENSIONS; i++) {
-            for (int j = 0; j < GRID_DIMENSIONS; j++) {
-                int index = (i * GRID_DIMENSIONS + j) * 6;
-                float x = i * cellSize;
-                float y = j * cellSize + 50;
+        // Create a VertexArray that will be large enough to hold all the cells from all grids
+        sf::VertexArray vertexArray(sf::PrimitiveType::Triangles, totalGrids* GRID_DIMENSIONS* GRID_DIMENSIONS * 6);
 
-                sf::Color color = colors[currentWorld.GetCellStateAt({ i,j })];
+        // Index to insert the vertices into the vertex array
+        size_t vertexIndex = 0;
 
-                // First Triangle (Bottom-left, Top-left, Top-right)
-                grid[index].position = { x, y };
-                grid[index + 1].position = { x, y + cellSize };
-                grid[index + 2].position = { x + cellSize, y };
+        for (const auto& entry : currentWorld.contents) {
+            const GridCoord& gridCoord = entry.first;   // Position of the grid in the world
+            const Grid64& gridData = entry.second;      // The grid data itself
 
-                // Second Triangle (Top-right, Bottom-right, Bottom-left)
-                grid[index + 3].position = { x + cellSize, y };
-                grid[index + 4].position = { x, y + cellSize };
-                grid[index + 5].position = { x + cellSize, y + cellSize };
+            // Calculate the world position of this grid
+            float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
+            float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
-                // Apply color to all triangle vertices
-                for (int k = 0; k < 6; k++) {
-                    grid[index + k].color = color;
+            // Render the cells of this grid
+            for (int i = 0; i < GRID_DIMENSIONS; i++) {
+                for (int j = 0; j < GRID_DIMENSIONS; j++) {
+                    float x = offsetX + i * cellSize;
+                    float y = offsetY + j * cellSize + 50; // Adding 50 for some offset (if needed)
+
+                    sf::Color color = colors[gridData.GetCellStateAt({ i, j })];
+
+                    // First Triangle (Bottom-left, Top-left, Top-right)
+                    vertexArray[vertexIndex++].position = { x, y };
+                    vertexArray[vertexIndex++].position = { x, y + cellSize };
+                    vertexArray[vertexIndex++].position = { x + cellSize, y };
+
+                    // Second Triangle (Top-right, Bottom-right, Bottom-left)
+                    vertexArray[vertexIndex++].position = { x + cellSize, y };
+                    vertexArray[vertexIndex++].position = { x, y + cellSize };
+                    vertexArray[vertexIndex++].position = { x + cellSize, y + cellSize };
+
+                    // Apply color to all triangle vertices
+                    for (int k = 0; k < 6; k++) {
+                        vertexArray[vertexIndex - 6 + k].color = color;
+                    }
                 }
             }
         }
 
-        // Draw world
+        // Draw the whole world
         window.setView(view);
-        window.draw(grid);
+        window.draw(vertexArray);
 
         // Draw UI
         window.setView(uiView);
