@@ -11,15 +11,16 @@ struct Grid64 {
 	int CoordinateY;
 	unsigned __int16 Fill;
 
-	__int8 Grid[GRID_DIMENSIONS][GRID_DIMENSIONS]; // In format Grid[x][y]
+	__int8 Grid[GRID_DIMENSIONS][GRID_DIMENSIONS]; // Grid[x][y]
 	__int8 OldGrid[GRID_DIMENSIONS][GRID_DIMENSIONS];
+
+	Grid64* neighborGrids[3][3] = {}; // Center = [1][1]
 
 	Grid64(); // empty
 
 	void Clear();
-	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution); // initialize to random
+	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution);
 
-	// Simulation
 	void Simulate(const R2INTRules& Rules);
 	void ResetOld();
 };

@@ -18,6 +18,14 @@ Grid64::Grid64() {
         }
     }
 
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            neighborGrids[i][j] = this; // Later, set this to nullptr by default
+        }
+    }
+
     // Debug: randomize grid
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -61,38 +69,43 @@ void Grid64::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt
     }
 }
 
-void Grid64::Simulate(const R2INTRules &Rules) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<int> number_distribution(0, 100);
+void Grid64::Simulate(const R2INTRules& Rules) {
+	Fill = 0;
 
-    Fill = 0;
+	for (int y = 0; y < GRID_DIMENSIONS; ++y) {
+		for (int x = 0; x < GRID_DIMENSIONS; ++x) {
+			int NeighborhoodWeight = 16777216;
+			int R2INT = 0;
 
-    for (int y = 0; y < GRID_DIMENSIONS; y++) {
-        for (int x = 0; x < GRID_DIMENSIONS; x++) {
-            int NeighborhoodWeight = 16777216;
-            int R2INT = 0;
-            bool Void = false;
+			for (int dy = -2; dy <= 2; ++dy) {
+				for (int dx = -2; dx <= 2; ++dx) {
+					int globalX = x + dx;
+					int globalY = y + dy;
 
-            for (int dy = -2; dy <= 2; dy++) {
-                for (int dx = -2; dx <= 2; dx++) {
-                    int nx = x + dx;
-                    int ny = y + dy;
-                    int CellState = 0;
-                    if (nx >= 0 && nx < GRID_DIMENSIONS && ny >= 0 && ny < GRID_DIMENSIONS) {
-                        CellState = OldGrid[nx][ny];
-                    }
-                    R2INT += CellState * NeighborhoodWeight;
-                    NeighborhoodWeight /= 2;
-                }
-            }
+					int offsetX = (globalX < 0) ? -1 : (globalX >= GRID_DIMENSIONS ? 1 : 0);
+					int offsetY = (globalY < 0) ? -1 : (globalY >= GRID_DIMENSIONS ? 1 : 0);
 
-            Grid[x][y] = ApplyRules(R2INT, Rules);
-            Fill += Grid[x][y]; // Potentially bugged for multistate patterns
-        }
-    }
+					int localX = (globalX + GRID_DIMENSIONS) % GRID_DIMENSIONS;
+					int localY = (globalY + GRID_DIMENSIONS) % GRID_DIMENSIONS;
 
-    memcpy(OldGrid, Grid, sizeof(Grid));
+					Grid64* target = neighborGrids[offsetX + 1][offsetY + 1];
+					int state = 0;
+
+					if (target) {
+						state = target->OldGrid[localX][localY];
+					}
+
+					R2INT += state * NeighborhoodWeight;
+					NeighborhoodWeight /= 2;
+				}
+			}
+
+			Grid[x][y] = ApplyRules(R2INT, Rules);
+			Fill += Grid[x][y];
+		}
+	}
+
+	memcpy(OldGrid, Grid, sizeof(Grid));
 }
 
 void Grid64::ResetOld()
