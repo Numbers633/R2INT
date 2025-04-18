@@ -82,7 +82,7 @@ int main() {
     int generation = 0;
     float elapsedTime = 0.0f;
 
-    float cellSize = 4.f;
+    float cellSize = 10.f;
     int n_states = 2;
 
     // Edit variables
@@ -115,7 +115,7 @@ int main() {
     ruleEditorColors[2] = sf::Color::Color(0, 255, 240);
     ruleEditorColors[3] = sf::Color::Color(224, 64, 240);
 
-    sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "R2INT");
+    sf::RenderWindow window(sf::VideoMode({ 640, 640 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
 
     // Camera variables

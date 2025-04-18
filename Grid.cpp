@@ -4,23 +4,6 @@
 #include <random>
 #include <iostream>
 
-const bool SINGLE_GRID = false;
-
-int GetDirFromXY(int x, int y)
-{ 
-    return y + (x * 3) + 4;
-}
-
-int GetYCoordinateFromDir(int dir)
-{
-    return dir / 3;
-}
-
-int GetXCoordinateFromDir(int dir)
-{
-    return (dir % 3) - 1;
-}
-
 Grid64::Grid64() {
     CoordinateX = 0;
     CoordinateY = 0;
@@ -40,40 +23,40 @@ Grid64::Grid64() {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> rnd(0, 100);
     sf::Rect<int> rc;
-    rc.position = sf::Vector2i(48, 48);
-    rc.size = sf::Vector2i(32, 32);
+    rc.position = sf::Vector2i(24, 24);
+    rc.size = sf::Vector2i(16, 16);
     RandomizeRect(rc, false, gen, rnd);
 }
 
-void Grid64::Reset()
+void Grid64::Clear()
 {
-    for (int y = 0; y < GRID_DIMENSIONS; y++) {
-        for (int x = 0; x < GRID_DIMENSIONS; x++) {
+    for (int x = 0; x < GRID_DIMENSIONS; x++) {
+        for (int y = 0; y < GRID_DIMENSIONS; y++) {
 
-            Grid[y][x] = 0;
-            OldGrid[y][x] = 0;
+            Grid[x][y] = 0;
+            OldGrid[x][y] = 0;
         }
     }
 }
 
 void Grid64::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution) {
-    for (int y = 0; y < GRID_DIMENSIONS; y++) {
-        for (int x = 0; x < GRID_DIMENSIONS; x++) {
-            sf::Vector2i cellPoint(y, x);  // Equivalent to POINT {x, y}
+    for (int x = 0; x < GRID_DIMENSIONS; x++) {
+        for (int y = 0; y < GRID_DIMENSIONS; y++) {
+            sf::Vector2i cellPoint(x, y);  // Equivalent to POINT {x, y}
 
             // Check if the point is within the randomized section
             if (!RandomizedSection.contains(cellPoint)) {
                 if (Delete) {
-                    Grid[y][x] = 0;
-                    OldGrid[y][x] = 0;
+                    Grid[x][y] = 0;
+                    OldGrid[x][y] = 0;
                 }
 
                 continue;
             }
 
             int n = number_distribution(gen);
-            Grid[y][x] = n / 51; // Bugged for higher Fill percentages
-            OldGrid[y][x] = Grid[y][x];
+            Grid[x][y] = n / 51; // Bugged for higher Fill percentages
+            OldGrid[x][y] = Grid[x][y];
         }
     }
 }
@@ -123,17 +106,13 @@ void Grid64::ResetOld()
     }
 }
 
-static bool operator!=(Grid64 lhs, Grid64 rhs)
+static bool operator!=(const Grid64& lhs, const Grid64& rhs)
 {
-    if (lhs.CoordinateX != rhs.CoordinateX)
-        return false;
-    if (lhs.CoordinateY != rhs.CoordinateY)
-        return false;
-    if (lhs.Fill != rhs.Fill)
-        return false;
-    if (lhs.Grid != rhs.Grid)
-        return false;
-    return true;
+    if (lhs.CoordinateX != rhs.CoordinateX) return true;
+    if (lhs.CoordinateY != rhs.CoordinateY) return true;
+    if (lhs.Fill != rhs.Fill) return true;
+    if (memcmp(lhs.Grid, rhs.Grid, sizeof(lhs.Grid)) != 0) return true;
+    return false;
 }
 
 //

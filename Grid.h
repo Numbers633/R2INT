@@ -4,25 +4,7 @@
 #include <random>
 #include "OffsetStruct.h"
 
-#define GRID_DIMENSIONS 128
-
-// Direction numbers
-#define DIRECTION_SOUTHWEST 0
-#define DIRECTION_WEST 1
-#define DIRECTION_NORTHWEST 2
-#define DIRECTION_SOUTH 3
-#define DIRECTION_NONE 4
-#define DIRECTION_NORTH 5
-#define DIRECTION_SOUTHEAST 6
-#define DIRECTION_EAST 7
-#define DIRECTION_NORTHEAST 8
-
-int GetDirFromXY(int x, int y);
-int GetYCoordinateFromDir(int dir);
-int GetXCoordinateFromDir(int dir);
-
-struct GridPadding;
-struct MetaNeighborhood;
+#define GRID_DIMENSIONS 64
 
 struct Grid64 {
 	int CoordinateX;
@@ -34,7 +16,7 @@ struct Grid64 {
 
 	Grid64(); // empty
 
-	void Reset();
+	void Clear();
 	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution); // initialize to random
 
 	// Simulation
