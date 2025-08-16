@@ -5,7 +5,7 @@
 #include <iostream>
 
 // Create Grid64 at origin
-Grid64::Grid64() {
+Chunk::Chunk() {
     CoordinateX = 0;
     CoordinateY = 0;
     Fill = 0;
@@ -29,7 +29,7 @@ Grid64::Grid64() {
 }
 
 // Create Grid64 at coordinates xy
-Grid64::Grid64(int x, int y) {
+Chunk::Chunk(int x, int y) {
     CoordinateX = x;
     CoordinateY = y;
     Fill = 0;
@@ -52,12 +52,12 @@ Grid64::Grid64(int x, int y) {
     neighborGrids[1][1] = this;
 }
 
-__int8 Grid64::GetCellStateAt(sf::Vector2i localXY) const
+__int8 Chunk::GetCellStateAt(sf::Vector2i localXY) const
 {
     return OldGrid[localXY.x][localXY.y];
 }
 
-void Grid64::Clear()
+void Chunk::Clear()
 {
     for (int x = 0; x < GRID_DIMENSIONS; x++) {
         for (int y = 0; y < GRID_DIMENSIONS; y++) {
@@ -68,7 +68,7 @@ void Grid64::Clear()
     }
 }
 
-void Grid64::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution) {
+void Chunk::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution) {
     for (int x = 0; x < GRID_DIMENSIONS; x++) {
         for (int y = 0; y < GRID_DIMENSIONS; y++) {
             sf::Vector2i cellPoint(x, y);  // Equivalent to POINT {x, y}
@@ -90,7 +90,7 @@ void Grid64::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt
     }
 }
 
-void Grid64::Simulate(const R2INTRules& rules, World& world)
+void Chunk::Simulate(const R2INTRules& rules, World& world)
 {
     Fill = 0;
     std::array<std::array<char, GRID_DIMENSIONS>, GRID_DIMENSIONS> newGrid = {};
@@ -131,12 +131,12 @@ void Grid64::Simulate(const R2INTRules& rules, World& world)
 
 
 // Synchronize the old grid with the current grid
-void Grid64::ResetOld()
+void Chunk::ResetOld()
 {
     OldGrid = Grid;
 }
 
-void EnsureNeighborsExist(World& world, Grid64& grid) {
+void EnsureNeighborsExist(World& world, Chunk& grid) {
     if (!grid.NeedsNeighbors()) return;
 
     GridCoord origin{ grid.CoordinateX, grid.CoordinateY };
@@ -147,13 +147,13 @@ void EnsureNeighborsExist(World& world, Grid64& grid) {
 
             GridCoord neighborCoord{ origin.x + dx, origin.y + dy };
             if (world.contents.find(neighborCoord) == world.contents.end()) {
-                world.contents[neighborCoord] = Grid64(neighborCoord.x, neighborCoord.y);
+                world.contents[neighborCoord] = Chunk(neighborCoord.x, neighborCoord.y);
             }
         }
     }
 }
 
-bool Grid64::NeedsNeighbors() const {
+bool Chunk::NeedsNeighbors() const {
     // Check if any cell is within 2 cells of the edge and is non-zero
     for (int y = 0; y < GRID_DIMENSIONS; ++y) {
         for (int x = 0; x < GRID_DIMENSIONS; ++x) {
@@ -167,7 +167,7 @@ bool Grid64::NeedsNeighbors() const {
     return false;
 }
 
-void Grid64::EnsureNeighborsExist(World& world) const
+void Chunk::EnsureNeighborsExist(World& world) const
 {
     for (int dy = -1; dy <= 1; ++dy) {
         for (int dx = -1; dx <= 1; ++dx) {
@@ -213,7 +213,7 @@ void Grid64::EnsureNeighborsExist(World& world) const
 
 
 
-static bool operator!=(const Grid64& lhs, const Grid64& rhs)
+static bool operator!=(const Chunk& lhs, const Chunk& rhs)
 {
     if (lhs.CoordinateX != rhs.CoordinateX) return true;
     if (lhs.CoordinateY != rhs.CoordinateY) return true;
@@ -227,7 +227,7 @@ static bool operator!=(const Grid64& lhs, const Grid64& rhs)
 //
  
 World::World() {
-    Grid64 initial;
+    Chunk initial;
     initial.CoordinateX = 0;
     initial.CoordinateY = 0;
     contents[{0, 0}] = initial;
@@ -330,7 +330,7 @@ void World::Simulate(const R2INTRules& Rules) {
         keys.push_back(coord);
 
     for (const GridCoord& coord : keys) {
-        Grid64& grid = contents.at(coord);
+        Chunk& grid = contents.at(coord);
         EnsureNeighborsExist(*this, grid);
     }
 
@@ -343,12 +343,12 @@ void World::Simulate(const R2INTRules& Rules) {
         keys.push_back(coord);
 
     for (const GridCoord& coord : keys) {
-        Grid64& grid = contents.at(coord);
+        Chunk& grid = contents.at(coord);
         grid.Simulate(Rules, *this);
     }
 
     for (const GridCoord& coord : keys) {
-        Grid64& grid = contents.at(coord);
+        Chunk& grid = contents.at(coord);
         grid.ResetOld();  // Synchronize old grid with current state
     }
 
@@ -356,7 +356,7 @@ void World::Simulate(const R2INTRules& Rules) {
     DeleteEmptyGrids(contents);
 }
 
-Grid64* World::GetNeighborGrid(int x, int y) {
+Chunk* World::GetNeighborGrid(int x, int y) {
     GridCoord coord = { x, y };
 
     // Check if the neighbor grid exists in the map
@@ -366,7 +366,7 @@ Grid64* World::GetNeighborGrid(int x, int y) {
     }
 
     // If it doesn't exist, create and link the new grid
-    Grid64 newGrid(coord.x, coord.y);
+    Chunk newGrid(coord.x, coord.y);
     contents[coord] = newGrid;  // Add the new grid to the map
 
     // Return the newly created grid
@@ -383,7 +383,7 @@ void World::EnsureAllPotentialNeighborGridsExist() {
             for (int dx = -1; dx <= 1; ++dx) {
                 GridCoord neighborCoord = { coord.x + dx, coord.y + dy };
                 if (contents.find(neighborCoord) == contents.end()) {
-                    Grid64& newGrid = contents[neighborCoord];
+                    Chunk& newGrid = contents[neighborCoord];
                     newGrid.CoordinateX = neighborCoord.x;
                     newGrid.CoordinateY = neighborCoord.y;
                 }
@@ -393,7 +393,7 @@ void World::EnsureAllPotentialNeighborGridsExist() {
 }
 
 
-void DeleteEmptyGrids(std::unordered_map<GridCoord, Grid64>& worldMap) {
+void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap) {
     for (auto it = worldMap.begin(); it != worldMap.end(); ) {
         if (it->second.Fill == 0) {
             it = worldMap.erase(it);

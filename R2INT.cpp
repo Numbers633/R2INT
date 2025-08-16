@@ -307,7 +307,7 @@ int main() {
 
         for (const auto& entry : currentWorld.contents) {
             const GridCoord& gridCoord = entry.first;
-            const Grid64& gridData = entry.second;
+            const Chunk& gridData = entry.second;
 
             float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
             float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;

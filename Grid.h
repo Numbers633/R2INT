@@ -27,7 +27,7 @@ namespace std {
 
 struct World;
 
-struct Grid64 {
+struct Chunk {
 	int CoordinateX;
 	int CoordinateY;
 	unsigned __int16 Fill;
@@ -35,10 +35,10 @@ struct Grid64 {
     std::array<std::array<__int8, GRID_DIMENSIONS>, GRID_DIMENSIONS> Grid;
     std::array<std::array<__int8, GRID_DIMENSIONS>, GRID_DIMENSIONS> OldGrid;
 
-	Grid64* neighborGrids[3][3] = {}; // Center = [1][1]
+	Chunk* neighborGrids[3][3] = {}; // Center = [1][1]
 
-	Grid64(); // empty
-	Grid64(int x, int y);
+	Chunk(); // empty
+	Chunk(int x, int y);
 
 	__int8 GetCellStateAt(sf::Vector2i localXY) const;
 
@@ -54,7 +54,7 @@ struct Grid64 {
 };
 
 struct World {
-	std::unordered_map<GridCoord, Grid64> contents;
+	std::unordered_map<GridCoord, Chunk> contents;
 
 	World();
 
@@ -62,7 +62,7 @@ struct World {
 	void PaintAtCell(sf::Vector2i p, int newState);
 	void LinkAllNeighbors();
 
-	Grid64* GetNeighborGrid(int x, int y);
+	Chunk* GetNeighborGrid(int x, int y);
 	__int8 GetCellStateAt(sf::Vector2i p); // Uses Grid
     __int8 GetCellStateAtOld(sf::Vector2i p); // Uses OldGrid
 
@@ -71,5 +71,5 @@ struct World {
     __int8 VoidState = 0; // Default state for empty space
 };
 
-void DeleteEmptyGrids(std::unordered_map<GridCoord, Grid64>& worldMap);
-void EnsureNeighborsExist(World& world, Grid64& grid);
+void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap);
+void EnsureNeighborsExist(World& world, Chunk& grid);
