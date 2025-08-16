@@ -253,7 +253,6 @@ int main() {
         // Process the grid update at a fixed timestep
         while (accumulator >= timeStep) {
             generation++;
-            currentWorld.LinkAllNeighbors();
             currentWorld.Simulate(globalRule);
             accumulator -= timeStep;
         }
@@ -308,38 +307,36 @@ int main() {
         size_t vertexIndex = 0;
 
         for (const auto& entry : currentWorld.contents) {
-            const GridCoord& gridCoord = entry.first;   // Position of the grid in the world
-            const Grid64& gridData = entry.second;      // The grid data itself
+            const GridCoord& gridCoord = entry.first;
+            const Grid64& gridData = entry.second;
 
-            // Calculate the world position of this grid
             float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
             float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
-            // Render the cells of this grid
             for (int i = 0; i < GRID_DIMENSIONS; i++) {
                 for (int j = 0; j < GRID_DIMENSIONS; j++) {
                     float x = offsetX + i * cellSize;
-                    float y = offsetY + j * cellSize + 50; // Adding 50 for some offset (if needed)
+                    float y = offsetY + j * cellSize + 50;
 
-                    sf::Color color = colors[gridData.GetCellStateAt({ i, j })];
+                    sf::Color color = colors[currentWorld.GetCellStateAt({ gridCoord.x * GRID_DIMENSIONS + i,
+                                                                          gridCoord.y * GRID_DIMENSIONS + j })];
 
-                    // First Triangle (Bottom-left, Top-left, Top-right)
-                    vertexArray[vertexIndex++].position = { x, y };
-                    vertexArray[vertexIndex++].position = { x, y + cellSize };
-                    vertexArray[vertexIndex++].position = { x + cellSize, y };
+                    // First triangle
+                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y);
+                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
+                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
 
-                    // Second Triangle (Top-right, Bottom-right, Bottom-left)
-                    vertexArray[vertexIndex++].position = { x + cellSize, y };
-                    vertexArray[vertexIndex++].position = { x, y + cellSize };
-                    vertexArray[vertexIndex++].position = { x + cellSize, y + cellSize };
+                    // Second triangle
+                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
+                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
+                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y + cellSize);
 
-                    // Apply color to all triangle vertices
-                    for (int k = 0; k < 6; k++) {
+                    for (int k = 0; k < 6; k++)
                         vertexArray[vertexIndex - 6 + k].color = color;
-                    }
                 }
             }
         }
+
 
         // Draw the whole world
         window.setView(view);

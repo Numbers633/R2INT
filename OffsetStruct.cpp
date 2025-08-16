@@ -8,18 +8,6 @@
 //
 // Code to manipulate Neighborhoods
 //
-inline Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs)
-{
-	Neighborhood ret = {
-		lhs[4], lhs[9], lhs[14], lhs[19], lhs[24],
-		lhs[3], lhs[8], lhs[13], lhs[18], lhs[23],
-		lhs[2], lhs[7], lhs[12], lhs[17], lhs[22],
-		lhs[1], lhs[6], lhs[11], lhs[16], lhs[21],
-		lhs[0], lhs[5], lhs[10], lhs[15], lhs[20]
-	};
-
-	return ret;
-}
 
 inline Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs)
 {
@@ -32,6 +20,19 @@ inline Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs)
 	};
 
 	return ret;
+}
+
+inline Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs)
+{
+    Neighborhood ret = {
+        lhs[4], lhs[9], lhs[14], lhs[19], lhs[24],
+        lhs[3], lhs[8], lhs[13], lhs[18], lhs[23],
+        lhs[2], lhs[7], lhs[12], lhs[17], lhs[22],
+        lhs[1], lhs[6], lhs[11], lhs[16], lhs[21],
+        lhs[0], lhs[5], lhs[10], lhs[15], lhs[20]
+    };
+
+    return ret;
 }
 
 inline Neighborhood MirrorNeighborhoodHorizontally(const Neighborhood& lhs)

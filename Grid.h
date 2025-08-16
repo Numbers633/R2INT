@@ -24,6 +24,8 @@ namespace std {
 	};
 }
 
+struct World;
+
 struct Grid64 {
 	int CoordinateX;
 	int CoordinateY;
@@ -42,7 +44,7 @@ struct Grid64 {
 	void Clear();
 	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution);
 
-	void Simulate(const R2INTRules& Rules);
+	void Simulate(const R2INTRules& Rules, World& world);
 	void ResetOld();
 	
 	bool NeedsNeighbors() const;
@@ -57,7 +59,10 @@ struct World {
 	void PaintAtCell(sf::Vector2i p, int newState);
 	void LinkAllNeighbors();
 
+	Grid64* GetNeighborGrid(int x, int y);
 	__int8 GetCellStateAt(sf::Vector2i p);
+
+    __int8 VoidState = 0; // Default state for empty space
 };
 
 void DeleteEmptyGrids(std::unordered_map<GridCoord, Grid64>& worldMap);

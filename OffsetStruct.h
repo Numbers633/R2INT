@@ -37,7 +37,7 @@ struct Neighborhood {
 	int8_t countTotalCells() const;
 };
 
-// R2INT data structure
+// R2INT rule data structure
 // Data is stored in a non-isotropic table
 class R2INTRules {
 public:
@@ -49,10 +49,10 @@ public:
 };
 
 // Rotation functions
-inline Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs);
-inline Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs);
-inline Neighborhood MirrorNeighborhoodHorizontally(const Neighborhood& lhs);
-inline Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs);
+Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs);
+Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs);
+Neighborhood MirrorNeighborhoodHorizontally(const Neighborhood& lhs);
+Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs);
 // Shifting functions
 Neighborhood ShiftNeighborhood(const Neighborhood& lhs, int dx, int dy);
 // Conversion functions

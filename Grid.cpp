@@ -90,69 +90,51 @@ void Grid64::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt
     }
 }
 
-void Grid64::Simulate(const R2INTRules& Rules) {
-    Fill = 0;
+void Grid64::Simulate(const R2INTRules& Rules, World& world) {
+    // Temporary buffer for the next state
+    std::array<std::array<__int8, GRID_DIMENSIONS>, GRID_DIMENSIONS> nextGrid;
 
-    // Sanity checksum of the OldGrid before simulation (to catch glitches)
-    int oldChecksum = 0;
-    for (int y = 0; y < GRID_DIMENSIONS; ++y)
-        for (int x = 0; x < GRID_DIMENSIONS; ++x)
-            oldChecksum += OldGrid[x][y] * (x + 1) * (y + 1);
+    Fill = 0;
 
     for (int y = 0; y < GRID_DIMENSIONS; ++y) {
         for (int x = 0; x < GRID_DIMENSIONS; ++x) {
-            int NeighborhoodWeight = 16777216;  // 2^24
-            int R2INT = 0;
+            Neighborhood nh;
 
+            // Build the 5x5 neighborhood
             for (int dy = -2; dy <= 2; ++dy) {
                 for (int dx = -2; dx <= 2; ++dx) {
-                    int globalX = x + dx;
-                    int globalY = y + dy;
+                    int gx = CoordinateX * GRID_DIMENSIONS + x + dx;
+                    int gy = CoordinateY * GRID_DIMENSIONS + y + dy;
 
-                    // Determine which neighbor tile this offset is in
-                    int offsetX = (globalX < 0) ? -1 : (globalX >= GRID_DIMENSIONS ? 1 : 0);
-                    int offsetY = (globalY < 0) ? -1 : (globalY >= GRID_DIMENSIONS ? 1 : 0);
+                    // Convert to grid coords
+                    int gridX = (gx >= 0) ? gx / GRID_DIMENSIONS : (gx - GRID_DIMENSIONS + 1) / GRID_DIMENSIONS;
+                    int gridY = (gy >= 0) ? gy / GRID_DIMENSIONS : (gy - GRID_DIMENSIONS + 1) / GRID_DIMENSIONS;
 
-                    int localX = (globalX + GRID_DIMENSIONS) % GRID_DIMENSIONS;
-                    int localY = (globalY + GRID_DIMENSIONS) % GRID_DIMENSIONS;
+                    int localX = (gx % GRID_DIMENSIONS + GRID_DIMENSIONS) % GRID_DIMENSIONS;
+                    int localY = (gy % GRID_DIMENSIONS + GRID_DIMENSIONS) % GRID_DIMENSIONS;
 
-                    Grid64* target = neighborGrids[offsetX + 1][offsetY + 1];
-                    int state = 0;
+                    Grid64* targetGrid = world.GetNeighborGrid(gridX, gridY);
+                    int state = targetGrid ? targetGrid->GetCellStateAt({ localX, localY }) : world.VoidState;
 
-                    if (target != nullptr) {
-                        if (localX < 0 || localX >= GRID_DIMENSIONS || localY < 0 || localY >= GRID_DIMENSIONS) {
-                            std::cerr << "[ERROR] Invalid index access: (" << localX << "," << localY << ") in grid at ("
-                                << target->CoordinateX << "," << target->CoordinateY << ")\n";
-                        }
-                        else {
-                            state = target->OldGrid[localX][localY];
-                        }
-                    }
-                    else {
-                        // Assume neighbor is empty if not present
-                        state = 0;
-                    }
-
-                    R2INT += state * NeighborhoodWeight;
-                    NeighborhoodWeight /= 2;
+                    nh[(dy + 2) * 5 + (dx + 2)] = state;
                 }
             }
 
-            Grid[x][y] = ApplyRules(R2INT, Rules);
-            Fill += Grid[x][y];
+            // Apply rules
+            nextGrid[x][y] = ApplyRules(nh, Rules);
+            Fill += nextGrid[x][y];
         }
     }
 
-    // Copy Grid to OldGrid after updating everything
+    // Commit nextGrid to current grid
+    for (int y = 0; y < GRID_DIMENSIONS; ++y)
+        for (int x = 0; x < GRID_DIMENSIONS; ++x)
+            Grid[x][y] = nextGrid[x][y];
+
+    // Copy to OldGrid for next generation
     for (int y = 0; y < GRID_DIMENSIONS; ++y)
         for (int x = 0; x < GRID_DIMENSIONS; ++x)
             OldGrid[x][y] = Grid[x][y];
-
-    // Sanity checksum after simulation
-    int newChecksum = 0;
-    for (int y = 0; y < GRID_DIMENSIONS; ++y)
-        for (int x = 0; x < GRID_DIMENSIONS; ++x)
-            newChecksum += Grid[x][y] * (x + 1) * (y + 1);
 }
 
 void Grid64::ResetOld()
@@ -217,29 +199,6 @@ World::World() {
     contents[{0, 0}] = initial;
 }
 
-void World::Simulate(const R2INTRules& Rules) {
-    // Step 1: Dynamically add neighbors if needed
-    std::vector<GridCoord> keys;
-    for (const auto& [coord, grid] : contents)
-        keys.push_back(coord); // copy keys to avoid iterator invalidation
-
-    for (const GridCoord& coord : keys) {
-        Grid64& grid = contents.at(coord);
-        EnsureNeighborsExist(*this, grid);
-    }
-
-    // Step 2: Link all neighbors
-    LinkAllNeighbors();
-
-    // Step 3: Simulate each grid
-    for (auto& [coord, grid] : contents) {
-        grid.Simulate(Rules);
-    }
-
-    // Step 4: Delete empty grids
-    DeleteEmptyGrids(contents);
-}
-
 void World::PaintAtCell(sf::Vector2i p, int newState)
 {
     int gx = p.x / GRID_DIMENSIONS;
@@ -250,9 +209,16 @@ void World::PaintAtCell(sf::Vector2i p, int newState)
     auto& grid = contents[{gx, gy}];
     grid.CoordinateX = gx;
     grid.CoordinateY = gy;
+
+    int oldState = grid.Grid[lx][ly];
+
     grid.Grid[lx][ly] = newState;
     grid.OldGrid[lx][ly] = newState;
+
+    // Update Fill to reflect live cells
+    grid.Fill += (newState - oldState);
 }
+
 
 __int8 World::GetCellStateAt(sf::Vector2i p)
 {
@@ -293,6 +259,53 @@ void World::LinkAllNeighbors()
             }
         }
     }
+}
+
+void World::Simulate(const R2INTRules& Rules) {
+    // Step 1: Ensure needed neighbors exist
+    std::vector<GridCoord> keys;
+    keys.reserve(contents.size());
+    for (const auto& [coord, grid] : contents)
+        keys.push_back(coord);
+
+    for (const GridCoord& coord : keys) {
+        Grid64& grid = contents.at(coord);
+        EnsureNeighborsExist(*this, grid);
+    }
+
+    // Step 2: Remove empties first to prevent dangling pointers
+    DeleteEmptyGrids(contents);
+
+    // Step 3: Relink neighbors after changes
+    LinkAllNeighbors();
+
+    // Step 4: Simulate all grids safely
+    keys.clear();
+    for (const auto& [coord, grid] : contents)
+        keys.push_back(coord);
+
+    for (const GridCoord& coord : keys) {
+        Grid64& grid = contents.at(coord);
+        grid.Simulate(Rules, *this);
+    }
+}
+
+
+Grid64* World::GetNeighborGrid(int x, int y) {
+    GridCoord coord = { x, y };
+
+    // Check if the neighbor grid exists in the map
+    auto it = contents.find(coord);
+    if (it != contents.end()) {
+        return &it->second;  // Return the existing grid
+    }
+
+    // If it doesn't exist, create and link the new grid
+    Grid64 newGrid(coord.x, coord.y);
+    contents[coord] = newGrid;  // Add the new grid to the map
+
+    // Return the newly created grid
+    return &contents[coord];
 }
 
 void DeleteEmptyGrids(std::unordered_map<GridCoord, Grid64>& worldMap) {
