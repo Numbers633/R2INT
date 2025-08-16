@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <array>
 #include <vector>
 #include <random>
 #include <unordered_map>
@@ -31,8 +32,8 @@ struct Grid64 {
 	int CoordinateY;
 	unsigned __int16 Fill;
 
-	__int8 Grid[GRID_DIMENSIONS][GRID_DIMENSIONS]; // Grid[x][y]
-	__int8 OldGrid[GRID_DIMENSIONS][GRID_DIMENSIONS];
+    std::array<std::array<__int8, GRID_DIMENSIONS>, GRID_DIMENSIONS> Grid;
+    std::array<std::array<__int8, GRID_DIMENSIONS>, GRID_DIMENSIONS> OldGrid;
 
 	Grid64* neighborGrids[3][3] = {}; // Center = [1][1]
 
@@ -46,6 +47,8 @@ struct Grid64 {
 
 	void Simulate(const R2INTRules& Rules, World& world);
 	void ResetOld();
+
+    void EnsureNeighborsExist(World& world) const;
 	
 	bool NeedsNeighbors() const;
 };
@@ -60,7 +63,10 @@ struct World {
 	void LinkAllNeighbors();
 
 	Grid64* GetNeighborGrid(int x, int y);
-	__int8 GetCellStateAt(sf::Vector2i p);
+	__int8 GetCellStateAt(sf::Vector2i p); // Uses Grid
+    __int8 GetCellStateAtOld(sf::Vector2i p); // Uses OldGrid
+
+    void EnsureAllPotentialNeighborGridsExist();
 
     __int8 VoidState = 0; // Default state for empty space
 };

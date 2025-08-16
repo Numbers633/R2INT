@@ -1,9 +1,10 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <array>
-#include <random>
-#include <iostream>
 #include <filesystem>
+#include <iostream>
+#include <functional> // for std::hash
+#include <random>
 #include <string>
 
 #include "Grid.h"
@@ -273,19 +274,17 @@ int main() {
         if (isRightMouseDown) {
             sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
             sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
-
-            // Subtract vertical offset (50)
             float x = mouseWorldPos.x;
             float y = mouseWorldPos.y - 50.f;
 
-            int i = static_cast<int>(x / cellSize);
-            int j = static_cast<int>(y / cellSize);
+            int i = (x >= 0.f) ? static_cast<int>(x / cellSize) : static_cast<int>((x - cellSize + 1.f) / cellSize);
+            int j = (y >= 0.f) ? static_cast<int>(y / cellSize) : static_cast<int>((y - cellSize + 1.f) / cellSize);
 
             if (generation == 0)
-            {
-                originalWorld.PaintAtCell({ i, j },drawingState);
-            }
+                originalWorld.PaintAtCell({ i, j }, drawingState);
+
             currentWorld.PaintAtCell({ i, j }, drawingState);
+
         }
         if (isLeftMouseDown) {
             window.setView(view);  // Use current view for mapping
@@ -313,13 +312,24 @@ int main() {
             float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
             float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
+            // Compute a deterministic random seed based on grid coordinates
+            std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
+            unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 64);
+            unsigned char bgG = static_cast<unsigned char>(((hashValue >> 8) & 0xFF) % 64);
+            unsigned char bgB = static_cast<unsigned char>(((hashValue >> 16) & 0xFF) % 64);
+            sf::Color gridBgColor(bgR, bgG, bgB);
+
             for (int i = 0; i < GRID_DIMENSIONS; i++) {
                 for (int j = 0; j < GRID_DIMENSIONS; j++) {
                     float x = offsetX + i * cellSize;
                     float y = offsetY + j * cellSize + 50;
 
-                    sf::Color color = colors[currentWorld.GetCellStateAt({ gridCoord.x * GRID_DIMENSIONS + i,
-                                                                          gridCoord.y * GRID_DIMENSIONS + j })];
+                    __int8 cellState = currentWorld.GetCellStateAt({
+                        gridCoord.x * GRID_DIMENSIONS + i,
+                        gridCoord.y * GRID_DIMENSIONS + j
+                        });
+
+                    sf::Color color = (cellState == currentWorld.VoidState) ? gridBgColor : colors[cellState];
 
                     // First triangle
                     vertexArray[vertexIndex++].position = sf::Vector2f(x, y);
