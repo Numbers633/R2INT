@@ -235,13 +235,13 @@ World::World() {
 
 void World::PaintAtCell(sf::Vector2i p, int newState)
 {
-    // Determine which grid
+    // Determine which grid the cell belongs to
     int gx = (p.x >= 0) ? p.x / GRID_DIMENSIONS : (p.x - GRID_DIMENSIONS + 1) / GRID_DIMENSIONS;
     int gy = (p.y >= 0) ? p.y / GRID_DIMENSIONS : (p.y - GRID_DIMENSIONS + 1) / GRID_DIMENSIONS;
 
-    // Local cell coordinates in the grid
-    int lx = p.x - gx * GRID_DIMENSIONS;
-    int ly = p.y - gy * GRID_DIMENSIONS;
+    // Local cell coordinates (wrapped into valid range)
+    int lx = ((p.x % GRID_DIMENSIONS) + GRID_DIMENSIONS) % GRID_DIMENSIONS;
+    int ly = ((p.y % GRID_DIMENSIONS) + GRID_DIMENSIONS) % GRID_DIMENSIONS;
 
     // Get or create the grid
     auto& grid = contents[{gx, gy}];
@@ -254,7 +254,7 @@ void World::PaintAtCell(sf::Vector2i p, int newState)
     grid.Grid[lx][ly] = newState;
     grid.OldGrid[lx][ly] = newState;
 
-    // Update Fill
+    // Update Fill count
     grid.Fill += (newState - oldState);
 }
 

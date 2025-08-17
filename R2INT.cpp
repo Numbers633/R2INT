@@ -163,12 +163,12 @@ int main() {
                     float x = mouseWorldPos.x;
                     float y = mouseWorldPos.y - 50.f;
 
+                    // Global cell coordinates
                     int i = static_cast<int>(x / cellSize);
                     int j = static_cast<int>(y / cellSize);
 
-                    if (i >= 0 && i < GRID_DIMENSIONS && j >= 0 && j < GRID_DIMENSIONS) {
-                        drawingState = (currentWorld.GetCellStateAt({i,j}) + 1) % n_states;
-                    }
+                    // No check against GRID_DIMENSIONS — these are global coordinates
+                    drawingState = (currentWorld.GetCellStateAt({ i, j }) + 1) % n_states;
                 }
                 else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
                 {
