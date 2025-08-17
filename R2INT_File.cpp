@@ -1,46 +1,60 @@
 #include <fstream>
 #include <iostream>
-#include <random>
+#include <unordered_set>
+#include <string>
+#include <vector>
+#include <execution>
 #include "OffsetStruct.h"
 #include "R2INT_File.h"
 
 void SaveTor2intFile(R2INTRules& saveRule)
 {
     std::cout << "Enter the filename to save your rule to: ";
-    std::string saveName = "";
+    std::string saveName;
     std::cin >> saveName;
 
-    // Append extension if not already present
     if (saveName.size() < 6 || saveName.substr(saveName.size() - 6) != ".r2int")
-    {
         saveName += ".r2int";
-    }
 
     std::ofstream outFile(saveName);
-    if (!outFile)
-    {
+    if (!outFile) {
         std::cerr << "Error: Could not open " << saveName << " for writing.\n";
         return;
     }
 
     std::cout << "Saving to " << saveName << std::endl;
 
-    for (int i = 0; i < 33554432; i++)
-    {
-        if (FindLowestNeighborhoodValue(i) != i)
-        {
-            continue;
-        }
-        if (saveRule.R2MAP[i] == true)
-        {
-            Neighborhood n = ConvertIntToNeighborhood(i);
+    std::unordered_set<std::string> writtenCompressed;
+    writtenCompressed.reserve(33554432 / 2); // Rough estimate
 
-            // Instead of cout, write to the file
-            outFile << n[12] << n[7] << n[8] << n[13] << n[18] << n[17] << n[16] << n[11] << n[6];
-            outFile << n[2] << n[3] << n[4] << n[9] << n[14] << n[19] << n[24] << n[23] << n[22];
-            outFile << n[21] << n[20] << n[15] << n[10] << n[5] << n[0] << "\n";
+    std::vector<int> allRules(33554432);
+    std::iota(allRules.begin(), allRules.end(), 0);
+
+    // Parallel loop
+    std::mutex mtx;
+    std::for_each(std::execution::par, allRules.begin(), allRules.end(), [&](int i) {
+        if (FindLowestNeighborhoodValue(i) != i) return; // Skip non-minimal
+        if (!saveRule.R2MAP[i]) return; // Skip inactive
+
+        Neighborhood n = ConvertIntToNeighborhood(i);
+        std::string compressed(25, '0');
+        for (int bit = 0; bit < 25; bit++)
+            compressed[bit] = n[bit] ? '1' : '0';
+
+        // Neighbor-x compression
+        for (int bit = 0; bit < 25; bit++) {
+            int neighborRule = i ^ (1 << bit);
+            if (neighborRule >= 0 && neighborRule < 33554432 && saveRule.R2MAP[neighborRule])
+                compressed[bit] = 'x';
         }
-    }
+
+        // Insert into the set (thread-safe with a mutex)
+        std::lock_guard<std::mutex> lock(mtx);
+        if (writtenCompressed.find(compressed) == writtenCompressed.end()) {
+            writtenCompressed.insert(compressed);
+            outFile << compressed << "\n";
+        }
+    });
 
     outFile.close();
     std::cout << "Save complete!" << std::endl;
