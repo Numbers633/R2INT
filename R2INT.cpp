@@ -308,8 +308,7 @@ int main() {
             float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
             float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
-#define _DEBUG_GRID
-#ifdef _DEBUG_GRID
+#ifdef _DEBUG
             // Compute a deterministic random seed based on grid coordinates (debug only)
             std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
             unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 32);

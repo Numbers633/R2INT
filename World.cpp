@@ -140,7 +140,7 @@ void World::Simulate(const R2INTRules& Rules) {
     // Save DeleteEmptyGrids for last to prevent issues during simulation
     DeleteEmptyGrids(contents, VoidState);
 
-    std::cout << "[DEBUG] Number of grids after simulation: " << contents.size() << std::endl;
+    //std::cout << "[DEBUG] Number of grids after simulation: " << contents.size() << std::endl;
 }
 
 Chunk* World::GetNeighborGrid(int x, int y) {

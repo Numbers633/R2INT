@@ -102,6 +102,75 @@ void Chunk::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt1
     }
 }
 
+// Synchronize the old grid with the current grid
+void Chunk::ResetOld()
+{
+    OldGrid = Grid;
+}
+
+void EnsureNeighborsExist(World& world, Chunk& grid) {
+    grid.EnsureNeighborsExist(world);
+}
+
+// --- 1) Change signature of NeedsNeighbors to accept the void state ---
+bool Chunk::NeedsNeighbors(__int8 voidState) const {
+    // Check if any cell of the previous-generation (OldGrid) is non-void
+    // and within 2 cells of the edge.
+    for (int y = 0; y < GRID_DIMENSIONS; ++y) {
+        for (int x = 0; x < GRID_DIMENSIONS; ++x) {
+            if (OldGrid[x][y] != voidState &&
+                (x <= 1 || x >= GRID_DIMENSIONS - 2 ||
+                    y <= 1 || y >= GRID_DIMENSIONS - 2)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Chunk::EnsureNeighborsExist(World& world) const
+{
+    for (int dy = -1; dy <= 1; ++dy) {
+        for (int dx = -1; dx <= 1; ++dx) {
+            if (dx == 0 && dy == 0) continue; // skip self
+
+            int nx = CoordinateX + dx;
+            int ny = CoordinateY + dy;
+            GridCoord neighborCoord{ nx, ny };
+
+            // Skip if neighbor already exists
+            if (world.contents.find(neighborCoord) != world.contents.end())
+                continue;
+
+            // Check if a neighbor is needed (any non-VoidState cell near that edge)
+            bool shouldCreate = NeedsNeighbors(world.VoidState);
+
+            if (!shouldCreate) continue;
+
+            // Create the neighbor grid in the world
+            auto& newGrid = world.contents[neighborCoord];
+            newGrid.CoordinateX = nx;
+            newGrid.CoordinateY = ny;
+
+            // Fill everything with current VoidState (strict infinite background)
+            newGrid.FillWithVoidState(world.VoidState);
+
+            // DEBUG log
+            //std::cout << "[DEBUG] Created new chunk at (" << nx << ", " << ny
+            //    << ") with VoidState=" << (int)world.VoidState << std::endl;
+        }
+    }
+}
+
+static bool operator!=(const Chunk& lhs, const Chunk& rhs)
+{
+    if (lhs.CoordinateX != rhs.CoordinateX) return true;
+    if (lhs.CoordinateY != rhs.CoordinateY) return true;
+    if (lhs.Fill != rhs.Fill) return true;
+    if (lhs.Grid != rhs.Grid) return true;  // std::array supports operator!= recursively
+    return false; // The chunks are equal, so return false
+}
+
 void Chunk::Simulate(const R2INTRules& rules, World& world)
 {
     __int8 NewVoidState = ApplyRules(world.VoidState == 1 ? 33554431 : 0, rules) ? 1 : 0;
@@ -135,7 +204,7 @@ void Chunk::Simulate(const R2INTRules& rules, World& world)
             Fill += newGrid[x][y];
 
             // Assume NewVoidState
-            if(newGrid[x][y] != NewVoidState && (x < 2 || x >= GRID_DIMENSIONS - 2 || y < 2 || y >= GRID_DIMENSIONS - 2))
+            if (newGrid[x][y] != NewVoidState && (x < 2 || x >= GRID_DIMENSIONS - 2 || y < 2 || y >= GRID_DIMENSIONS - 2))
             {
                 //EnsureNeighborsExist(world);
             }
@@ -143,134 +212,4 @@ void Chunk::Simulate(const R2INTRules& rules, World& world)
     }
 
     Grid = newGrid;
-}
-
-
-// Synchronize the old grid with the current grid
-void Chunk::ResetOld()
-{
-    OldGrid = Grid;
-}
-
-void EnsureNeighborsExist(World& world, Chunk& grid) {
-    if (!grid.NeedsNeighbors(world.VoidState)) return;
-
-    GridCoord origin{ grid.CoordinateX, grid.CoordinateY };
-
-    for (int dy = -1; dy <= 1; ++dy) {
-        for (int dx = -1; dx <= 1; ++dx) {
-            if (dx == 0 && dy == 0) continue;
-
-            GridCoord neighborCoord{ origin.x + dx, origin.y + dy };
-            if (world.contents.find(neighborCoord) == world.contents.end()) {
-                world.contents[neighborCoord] = Chunk(neighborCoord.x, neighborCoord.y);
-            }
-        }
-    }
-}
-
-// --- 1) Change signature of NeedsNeighbors to accept the void state ---
-bool Chunk::NeedsNeighbors(__int8 voidState) const {
-    // Check if any cell of the previous-generation (OldGrid) is non-void
-    // and within 2 cells of the edge.
-    for (int y = 0; y < GRID_DIMENSIONS; ++y) {
-        for (int x = 0; x < GRID_DIMENSIONS; ++x) {
-            if (OldGrid[x][y] != voidState &&
-                (x <= 1 || x >= GRID_DIMENSIONS - 2 ||
-                    y <= 1 || y >= GRID_DIMENSIONS - 2)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-void Chunk::EnsureNeighborsExist(World& world) const
-{
-    for (int dy = -1; dy <= 1; ++dy) {
-        for (int dx = -1; dx <= 1; ++dx) {
-            if (dx == 0 && dy == 0) continue; // skip self
-
-            int nx = CoordinateX + dx;
-            int ny = CoordinateY + dy;
-            GridCoord neighborCoord{ nx, ny };
-
-            // Skip if neighbor already exists
-            if (world.contents.find(neighborCoord) != world.contents.end())
-                continue;
-
-            // Check if a neighbor is needed (any live cell near that edge)
-            bool shouldCreate = false;
-
-            // Horizontal edges
-            if (dx == -1) {
-                for (int x = 0; x < GRID_DIMENSIONS; x++) {
-                    if (Grid[x][0] != world.VoidState) {
-                        shouldCreate = true;
-                        break;
-                    }
-                }
-            }
-            if (dx == 1) {
-                for (int x = 0; x < GRID_DIMENSIONS; x++) {
-                    if (Grid[x][GRID_DIMENSIONS - 1] != world.VoidState) {
-                        shouldCreate = true;
-                        break;
-                    }
-                }
-            }
-
-            // Vertical edges
-            if (dy == -1) {
-                for (int x = 0; x < GRID_DIMENSIONS; x++) {
-                    if (Grid[x][0] != world.VoidState) {
-                        shouldCreate = true;
-                        break;
-                    }
-                }
-            }
-            if (dy == 1) {
-                for (int x = 0; x < GRID_DIMENSIONS; x++) {
-                    if (Grid[x][GRID_DIMENSIONS - 1] != world.VoidState) {
-                        shouldCreate = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!shouldCreate) continue;
-
-            // Create the neighbor grid in the world
-            auto& newGrid = world.contents[neighborCoord];
-            newGrid.CoordinateX = nx;
-            newGrid.CoordinateY = ny;
-            newGrid.Fill = 0;
-
-            newGrid.FillWithVoidState(world.VoidState);
-
-            // Initialize OldGrid from the current grid edge
-            for (int i = 0; i < GRID_DIMENSIONS; i++) {
-                if (dy == -1 && Grid[i][0] != world.VoidState)
-                    newGrid.OldGrid[i][GRID_DIMENSIONS - 1] = Grid[i][0]; // top edge
-                if (dy == 1 && Grid[i][GRID_DIMENSIONS - 1] != world.VoidState)
-                    newGrid.OldGrid[i][0] = Grid[i][GRID_DIMENSIONS - 1]; // bottom edge
-                if (dx == -1 && Grid[0][i] != world.VoidState)
-                    newGrid.OldGrid[GRID_DIMENSIONS - 1][i] = Grid[0][i]; // left edge
-                if (dx == 1 && Grid[GRID_DIMENSIONS - 1][i] != world.VoidState)
-                    newGrid.OldGrid[0][i] = Grid[GRID_DIMENSIONS - 1][i]; // right edge
-            }
-
-        }
-    }
-}
-
-
-
-static bool operator!=(const Chunk& lhs, const Chunk& rhs)
-{
-    if (lhs.CoordinateX != rhs.CoordinateX) return true;
-    if (lhs.CoordinateY != rhs.CoordinateY) return true;
-    if (lhs.Fill != rhs.Fill) return true;
-    if (lhs.Grid != rhs.Grid) return true;  // std::array supports operator!= recursively
-    return false; // The chunks are equal, so return false
 }
