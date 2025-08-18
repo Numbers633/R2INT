@@ -164,8 +164,8 @@ int main() {
                     float y = mouseWorldPos.y - 50.f;
 
                     // Global cell coordinates
-                    int i = static_cast<int>(x / cellSize);
-                    int j = static_cast<int>(y / cellSize);
+                    int i = static_cast<int>(std::floor(x / cellSize));
+                    int j = static_cast<int>(std::floor(y / cellSize));
 
                     // No check against GRID_DIMENSIONS — these are global coordinates
                     drawingState = (currentWorld.GetCellStateAt({ i, j }) + 1) % n_states;
