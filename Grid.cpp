@@ -219,7 +219,7 @@ static bool operator!=(const Chunk& lhs, const Chunk& rhs)
     if (lhs.CoordinateY != rhs.CoordinateY) return true;
     if (lhs.Fill != rhs.Fill) return true;
     if (lhs.Grid != rhs.Grid) return true;  // std::array supports operator!= recursively
-    return false;
+    return false; // The chunks are unequal, so return false
 }
 
 //
@@ -243,8 +243,10 @@ void World::PaintAtCell(sf::Vector2i p, int newState)
     int lx = ((p.x % GRID_DIMENSIONS) + GRID_DIMENSIONS) % GRID_DIMENSIONS;
     int ly = ((p.y % GRID_DIMENSIONS) + GRID_DIMENSIONS) % GRID_DIMENSIONS;
 
+    GridCoord coord = {gx, gy};
+
     // Get or create the grid
-    auto& grid = contents[{gx, gy}];
+    auto& grid = contents[coord];
     grid.CoordinateX = gx;
     grid.CoordinateY = gy;
 
@@ -256,6 +258,11 @@ void World::PaintAtCell(sf::Vector2i p, int newState)
 
     // Update Fill count
     grid.Fill += (newState - oldState);
+
+    // Remove the chunk if it is empty after erasing
+    if (newState == 0 && grid.Fill == 0) {
+        contents.erase(coord);
+    }
 }
 
 __int8 World::GetCellStateAt(sf::Vector2i p)
