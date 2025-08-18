@@ -52,6 +52,17 @@ Chunk::Chunk(int x, int y) {
     neighborGrids[1][1] = this;
 }
 
+void Chunk::FillWithVoidState(char voidState)
+{
+    for (int y = 0; y < GRID_DIMENSIONS; ++y) {
+        for (int x = 0; x < GRID_DIMENSIONS; ++x) {
+            Grid[x][y] = voidState;
+            OldGrid[x][y] = voidState;
+        }
+    }
+    Fill = GRID_DIMENSIONS * GRID_DIMENSIONS * voidState; // Fill is the total number of filled cells
+}
+
 __int8 Chunk::GetCellStateAt(sf::Vector2i localXY) const
 {
     return OldGrid[localXY.x][localXY.y];
@@ -92,6 +103,8 @@ void Chunk::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt1
 
 void Chunk::Simulate(const R2INTRules& rules, World& world)
 {
+    __int8 NewVoidState = ApplyRules(world.VoidState == 1 ? 33554431 : 0, rules) ? 1 : 0;
+
     Fill = 0;
     std::array<std::array<char, GRID_DIMENSIONS>, GRID_DIMENSIONS> newGrid = {};
 
@@ -109,6 +122,7 @@ void Chunk::Simulate(const R2INTRules& rules, World& world)
                     int gx = CoordinateX * GRID_DIMENSIONS + x + dx;
                     int gy = CoordinateY * GRID_DIMENSIONS + y + dy;
 
+                    // Assume OldVoidState
                     int state = world.GetCellStateAtOld({ gx, gy }); // <-- Use OldGrid
 
                     neighborhoodInt += state * weight;
@@ -119,9 +133,10 @@ void Chunk::Simulate(const R2INTRules& rules, World& world)
             newGrid[x][y] = ApplyRules(neighborhoodInt, rules) ? 1 : 0;
             Fill += newGrid[x][y];
 
-            if(newGrid[x][y] != 0 && (x < 2 || x >= GRID_DIMENSIONS - 2 || y < 2 || y >= GRID_DIMENSIONS - 2))
+            // Assume NewVoidState
+            if(newGrid[x][y] != NewVoidState && (x < 2 || x >= GRID_DIMENSIONS - 2 || y < 2 || y >= GRID_DIMENSIONS - 2))
             {
-                EnsureNeighborsExist(world);
+                //EnsureNeighborsExist(world);
             }
         }
     }
@@ -137,7 +152,7 @@ void Chunk::ResetOld()
 }
 
 void EnsureNeighborsExist(World& world, Chunk& grid) {
-    if (!grid.NeedsNeighbors()) return;
+    if (!grid.NeedsNeighbors(world.VoidState)) return;
 
     GridCoord origin{ grid.CoordinateX, grid.CoordinateY };
 
@@ -153,11 +168,13 @@ void EnsureNeighborsExist(World& world, Chunk& grid) {
     }
 }
 
-bool Chunk::NeedsNeighbors() const {
-    // Check if any cell is within 2 cells of the edge and is non-zero
+// --- 1) Change signature of NeedsNeighbors to accept the void state ---
+bool Chunk::NeedsNeighbors(__int8 voidState) const {
+    // Check if any cell of the previous-generation (OldGrid) is non-void
+    // and within 2 cells of the edge.
     for (int y = 0; y < GRID_DIMENSIONS; ++y) {
         for (int x = 0; x < GRID_DIMENSIONS; ++x) {
-            if (OldGrid[x][y] != 0 &&
+            if (OldGrid[x][y] != voidState &&
                 (x <= 1 || x >= GRID_DIMENSIONS - 2 ||
                     y <= 1 || y >= GRID_DIMENSIONS - 2)) {
                 return true;
@@ -185,12 +202,40 @@ void Chunk::EnsureNeighborsExist(World& world) const
             bool shouldCreate = false;
 
             // Horizontal edges
-            if (dx == -1) { for (int y = 0; y < GRID_DIMENSIONS; y++) if (Grid[0][y] != 0) { shouldCreate = true; break; } }
-            if (dx == 1) { for (int y = 0; y < GRID_DIMENSIONS; y++) if (Grid[GRID_DIMENSIONS - 1][y] != 0) { shouldCreate = true; break; } }
+            if (dx == -1) {
+                for (int x = 0; x < GRID_DIMENSIONS; x++) {
+                    if (Grid[x][0] != world.VoidState) {
+                        shouldCreate = true;
+                        break;
+                    }
+                }
+            }
+            if (dx == 1) {
+                for (int x = 0; x < GRID_DIMENSIONS; x++) {
+                    if (Grid[x][GRID_DIMENSIONS - 1] != world.VoidState) {
+                        shouldCreate = true;
+                        break;
+                    }
+                }
+            }
 
             // Vertical edges
-            if (dy == -1) { for (int x = 0; x < GRID_DIMENSIONS; x++) if (Grid[x][0] != 0) { shouldCreate = true; break; } }
-            if (dy == 1) { for (int x = 0; x < GRID_DIMENSIONS; x++) if (Grid[x][GRID_DIMENSIONS - 1] != 0) { shouldCreate = true; break; } }
+            if (dy == -1) {
+                for (int x = 0; x < GRID_DIMENSIONS; x++) {
+                    if (Grid[x][0] != world.VoidState) {
+                        shouldCreate = true;
+                        break;
+                    }
+                }
+            }
+            if (dy == 1) {
+                for (int x = 0; x < GRID_DIMENSIONS; x++) {
+                    if (Grid[x][GRID_DIMENSIONS - 1] != world.VoidState) {
+                        shouldCreate = true;
+                        break;
+                    }
+                }
+            }
 
             if (!shouldCreate) continue;
 
@@ -200,13 +245,20 @@ void Chunk::EnsureNeighborsExist(World& world) const
             newGrid.CoordinateY = ny;
             newGrid.Fill = 0;
 
+            newGrid.FillWithVoidState(world.VoidState);
+
             // Initialize OldGrid from the current grid edge
             for (int i = 0; i < GRID_DIMENSIONS; i++) {
-                if (dy == -1) newGrid.OldGrid[i][GRID_DIMENSIONS - 1] = Grid[i][0];      // top
-                if (dy == 1)  newGrid.OldGrid[i][0] = Grid[i][GRID_DIMENSIONS - 1]; // bottom
-                if (dx == -1) newGrid.OldGrid[GRID_DIMENSIONS - 1][i] = Grid[0][i];     // left
-                if (dx == 1)  newGrid.OldGrid[0][i] = Grid[GRID_DIMENSIONS - 1][i]; // right
+                if (dy == -1 && Grid[i][0] != world.VoidState)
+                    newGrid.OldGrid[i][GRID_DIMENSIONS - 1] = Grid[i][0]; // top edge
+                if (dy == 1 && Grid[i][GRID_DIMENSIONS - 1] != world.VoidState)
+                    newGrid.OldGrid[i][0] = Grid[i][GRID_DIMENSIONS - 1]; // bottom edge
+                if (dx == -1 && Grid[0][i] != world.VoidState)
+                    newGrid.OldGrid[GRID_DIMENSIONS - 1][i] = Grid[0][i]; // left edge
+                if (dx == 1 && Grid[GRID_DIMENSIONS - 1][i] != world.VoidState)
+                    newGrid.OldGrid[0][i] = Grid[GRID_DIMENSIONS - 1][i]; // right edge
             }
+
         }
     }
 }
@@ -219,7 +271,7 @@ static bool operator!=(const Chunk& lhs, const Chunk& rhs)
     if (lhs.CoordinateY != rhs.CoordinateY) return true;
     if (lhs.Fill != rhs.Fill) return true;
     if (lhs.Grid != rhs.Grid) return true;  // std::array supports operator!= recursively
-    return false; // The chunks are unequal, so return false
+    return false; // The chunks are equal, so return false
 }
 
 //
@@ -281,7 +333,7 @@ __int8 World::GetCellStateAt(sf::Vector2i p)
     if (it != contents.end())
         return it->second.Grid[lx][ly];
 
-    // Default background state
+    // Default background state (flickers with B0)
     return VoidState;
 }
 
@@ -354,13 +406,18 @@ void World::Simulate(const R2INTRules& Rules) {
         grid.Simulate(Rules, *this);
     }
 
+    // Simulate the VoidState under the rules for B0 handling
+    VoidState = ApplyRules(VoidState == 1 ? 33554431 : 0, Rules) ? 1 : 0;
+
     for (const GridCoord& coord : keys) {
         Chunk& grid = contents.at(coord);
-        grid.ResetOld();  // Synchronize old grid with current state
+        grid.ResetOld();
     }
 
     // Save DeleteEmptyGrids for last to prevent issues during simulation
-    DeleteEmptyGrids(contents);
+    DeleteEmptyGrids(contents, VoidState);
+
+    std::cout << "[DEBUG] Number of grids after simulation: " << contents.size() << std::endl;
 }
 
 Chunk* World::GetNeighborGrid(int x, int y) {
@@ -374,9 +431,8 @@ Chunk* World::GetNeighborGrid(int x, int y) {
 
     // If it doesn't exist, create and link the new grid
     Chunk newGrid(coord.x, coord.y);
-    contents[coord] = newGrid;  // Add the new grid to the map
+    contents[coord] = newGrid;
 
-    // Return the newly created grid
     return &contents[coord];
 }
 
@@ -400,9 +456,9 @@ void World::EnsureAllPotentialNeighborGridsExist() {
 }
 
 
-void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap) {
+void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap, __int8 VoidState) {
     for (auto it = worldMap.begin(); it != worldMap.end(); ) {
-        if (it->second.Fill == 0) {
+        if ((it->second.Fill == 0 && VoidState == 0) || (it->second.Fill == 4096 && VoidState == 1)) {
             it = worldMap.erase(it);
         }
         else {

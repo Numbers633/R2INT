@@ -167,7 +167,6 @@ int main() {
                     int i = static_cast<int>(std::floor(x / cellSize));
                     int j = static_cast<int>(std::floor(y / cellSize));
 
-                    // No check against GRID_DIMENSIONS — these are global coordinates
                     drawingState = (currentWorld.GetCellStateAt({ i, j }) + 1) % n_states;
                 }
                 else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
@@ -269,7 +268,7 @@ int main() {
             frameCount = 0;
         }
 
-        window.clear(sf::Color::Black);
+        window.clear(colors[currentWorld.VoidState]);
 
         if (isRightMouseDown) {
             sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
@@ -296,10 +295,7 @@ int main() {
             previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));  // <== Update after view.move
         }
 
-        // Calculate the total number of grids to draw
         size_t totalGrids = currentWorld.contents.size();
-
-        // Create a VertexArray that will be large enough to hold all the cells from all grids
         sf::VertexArray vertexArray(sf::PrimitiveType::Triangles, totalGrids* GRID_DIMENSIONS* GRID_DIMENSIONS * 6);
 
         // Index to insert the vertices into the vertex array
@@ -312,7 +308,8 @@ int main() {
             float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
             float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
-#ifdef _DEBUG
+#define _DEBUG_GRID
+#ifdef _DEBUG_GRID
             // Compute a deterministic random seed based on grid coordinates (debug only)
             std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
             unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 32);
@@ -333,7 +330,7 @@ int main() {
                         gridCoord.y * GRID_DIMENSIONS + j
                         });
 
-                    sf::Color color = (cellState == currentWorld.VoidState) ? gridBgColor : colors[cellState];
+                    sf::Color color = (cellState == 0) ? gridBgColor : colors[cellState];
 
                     // First triangle
                     vertexArray[vertexIndex++].position = sf::Vector2f(x, y);
@@ -360,7 +357,6 @@ int main() {
         window.setView(uiView);
         window.draw(menuText);
 
-        // Present the frame
         window.display();
 
         if (secondWindow && secondWindow->isOpen()) {

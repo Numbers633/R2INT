@@ -43,6 +43,7 @@ struct Chunk {
 	__int8 GetCellStateAt(sf::Vector2i localXY) const;
 
 	void Clear();
+    void FillWithVoidState(char voidState);
 	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution);
 
 	void Simulate(const R2INTRules& Rules, World& world);
@@ -50,7 +51,7 @@ struct Chunk {
 
     void EnsureNeighborsExist(World& world) const;
 	
-	bool NeedsNeighbors() const;
+	bool NeedsNeighbors(__int8 voidState) const;
 };
 
 struct World {
@@ -71,5 +72,5 @@ struct World {
     __int8 VoidState = 0; // Default state for empty space
 };
 
-void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap);
+void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap, __int8 VoidState);
 void EnsureNeighborsExist(World& world, Chunk& grid);
