@@ -312,12 +312,16 @@ int main() {
             float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
             float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
-            // Compute a deterministic random seed based on grid coordinates
+#ifdef _DEBUG
+            // Compute a deterministic random seed based on grid coordinates (debug only)
             std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
-            unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 64);
-            unsigned char bgG = static_cast<unsigned char>(((hashValue >> 8) & 0xFF) % 64);
-            unsigned char bgB = static_cast<unsigned char>(((hashValue >> 16) & 0xFF) % 64);
+            unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 32);
+            unsigned char bgG = static_cast<unsigned char>(((hashValue >> 8) & 0xFF) % 32);
+            unsigned char bgB = static_cast<unsigned char>(((hashValue >> 16) & 0xFF) % 32);
             sf::Color gridBgColor(bgR, bgG, bgB);
+#else
+            sf::Color gridBgColor(0, 0, 0); // Use a fixed background color in release
+#endif
 
             for (int i = 0; i < GRID_DIMENSIONS; i++) {
                 for (int j = 0; j < GRID_DIMENSIONS; j++) {
