@@ -189,3 +189,60 @@ void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap, __int8 Voi
         }
     }
 }
+
+// Draw
+void World::Draw(sf::RenderWindow& window, float cellSize, const std::vector<sf::Color>& colors)
+{
+    size_t totalGrids = contents.size();
+    sf::VertexArray vertexArray(sf::PrimitiveType::Triangles, totalGrids * GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
+
+    size_t vertexIndex = 0;
+
+    for (const auto& entry : contents) {
+        const GridCoord& gridCoord = entry.first;
+        const Chunk& gridData = entry.second;
+
+        float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
+        float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
+
+#ifdef _DEBUG
+        // Deterministic debug background color
+        std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
+        unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 32);
+        unsigned char bgG = static_cast<unsigned char>(((hashValue >> 8) & 0xFF) % 32);
+        unsigned char bgB = static_cast<unsigned char>(((hashValue >> 16) & 0xFF) % 32);
+        sf::Color gridBgColor(bgR, bgG, bgB);
+#else
+        sf::Color gridBgColor(0, 0, 0); // Release build fixed background
+#endif
+
+        for (int i = 0; i < GRID_DIMENSIONS; i++) {
+            for (int j = 0; j < GRID_DIMENSIONS; j++) {
+                float x = offsetX + i * cellSize;
+                float y = offsetY + j * cellSize;
+
+                __int8 cellState = GetCellStateAt({
+                    gridCoord.x * GRID_DIMENSIONS + i,
+                    gridCoord.y * GRID_DIMENSIONS + j
+                    });
+
+                sf::Color color = (cellState == 0) ? gridBgColor : colors[cellState];
+
+                // First triangle
+                vertexArray[vertexIndex++].position = sf::Vector2f(x, y);
+                vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
+                vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
+
+                // Second triangle
+                vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
+                vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
+                vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y + cellSize);
+
+                for (int k = 0; k < 6; k++)
+                    vertexArray[vertexIndex - 6 + k].color = color;
+            }
+        }
+    }
+
+    window.draw(vertexArray);
+}

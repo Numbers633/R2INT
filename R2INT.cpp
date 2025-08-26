@@ -161,7 +161,7 @@ int main() {
                     sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
 
                     float x = mouseWorldPos.x;
-                    float y = mouseWorldPos.y - 50.f;
+                    float y = mouseWorldPos.y;
 
                     // Global cell coordinates
                     int i = static_cast<int>(std::floor(x / cellSize));
@@ -269,12 +269,13 @@ int main() {
         }
 
         window.clear(colors[currentWorld.VoidState]);
+        window.setView(view);
 
         if (isRightMouseDown) {
             sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
             sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
             float x = mouseWorldPos.x;
-            float y = mouseWorldPos.y - 50.f;
+            float y = mouseWorldPos.y;
 
             int i = (x >= 0.f) ? static_cast<int>(x / cellSize) : static_cast<int>((x - cellSize + 1.f) / cellSize);
             int j = (y >= 0.f) ? static_cast<int>(y / cellSize) : static_cast<int>((y - cellSize + 1.f) / cellSize);
@@ -283,7 +284,6 @@ int main() {
                 originalWorld.PaintAtCell({ i, j }, drawingState);
 
             currentWorld.PaintAtCell({ i, j }, drawingState);
-
         }
         if (isLeftMouseDown) {
             window.setView(view);  // Use current view for mapping
@@ -294,63 +294,8 @@ int main() {
             window.setView(view);
             previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));  // <== Update after view.move
         }
-
-        size_t totalGrids = currentWorld.contents.size();
-        sf::VertexArray vertexArray(sf::PrimitiveType::Triangles, totalGrids* GRID_DIMENSIONS* GRID_DIMENSIONS * 6);
-
-        // Index to insert the vertices into the vertex array
-        size_t vertexIndex = 0;
-
-        for (const auto& entry : currentWorld.contents) {
-            const GridCoord& gridCoord = entry.first;
-            const Chunk& gridData = entry.second;
-
-            float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
-            float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
-
-#ifdef _DEBUG
-            // Compute a deterministic random seed based on grid coordinates (debug only)
-            std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
-            unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 32);
-            unsigned char bgG = static_cast<unsigned char>(((hashValue >> 8) & 0xFF) % 32);
-            unsigned char bgB = static_cast<unsigned char>(((hashValue >> 16) & 0xFF) % 32);
-            sf::Color gridBgColor(bgR, bgG, bgB);
-#else
-            sf::Color gridBgColor(0, 0, 0); // Use a fixed background color in release
-#endif
-
-            for (int i = 0; i < GRID_DIMENSIONS; i++) {
-                for (int j = 0; j < GRID_DIMENSIONS; j++) {
-                    float x = offsetX + i * cellSize;
-                    float y = offsetY + j * cellSize + 50;
-
-                    __int8 cellState = currentWorld.GetCellStateAt({
-                        gridCoord.x * GRID_DIMENSIONS + i,
-                        gridCoord.y * GRID_DIMENSIONS + j
-                        });
-
-                    sf::Color color = (cellState == 0) ? gridBgColor : colors[cellState];
-
-                    // First triangle
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
-
-                    // Second triangle
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y + cellSize);
-
-                    for (int k = 0; k < 6; k++)
-                        vertexArray[vertexIndex - 6 + k].color = color;
-                }
-            }
-        }
-
-
-        // Draw the whole world
-        window.setView(view);
-        window.draw(vertexArray);
+        std::vector<sf::Color> colorVec(std::begin(colors), std::end(colors));
+        currentWorld.Draw(window, cellSize, colorVec);
 
         // Draw UI
         window.setView(uiView);
@@ -403,6 +348,9 @@ int main() {
                     }
                 }
                 else if (secondEvent->is<sf::Event::KeyPressed>()) {
+                    const bool INVERT_CONTROLS = true;
+                    int dx = 0, dy = 0;
+
                     sf::Keyboard::Key keyPress = secondEvent->getIf<sf::Event::KeyPressed>()->code;
                     if (keyPress == sf::Keyboard::Key::R)
                     {
@@ -411,21 +359,21 @@ int main() {
                             editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
                         }
                     }
-                    else if (keyPress == sf::Keyboard::Key::Left)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, -1, 0);
+                    else  if (keyPress == sf::Keyboard::Key::Left) {
+                        dx = INVERT_CONTROLS ? 1 : -1;
                     }
-                    else if (keyPress == sf::Keyboard::Key::Right)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 1, 0);
+                    else if (keyPress == sf::Keyboard::Key::Right) {
+                        dx = INVERT_CONTROLS ? -1 : 1;
                     }
-                    else if (keyPress == sf::Keyboard::Key::Up)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 0, -1);
+                    else if (keyPress == sf::Keyboard::Key::Up) {
+                        dy = INVERT_CONTROLS ? 1 : -1;
                     }
-                    else if (keyPress == sf::Keyboard::Key::Down)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 0, 1);
+                    else if (keyPress == sf::Keyboard::Key::Down) {
+                        dy = INVERT_CONTROLS ? -1 : 1;
+                    }
+
+                    if (dx != 0 || dy != 0) {
+                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, dx, dy);
                     }
                 }
             }

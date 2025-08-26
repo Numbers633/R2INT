@@ -35,10 +35,9 @@ void SaveTor2intFile(R2INTRules& saveRule)
         {
             Neighborhood n = ConvertIntToNeighborhood(i);
 
-            // Instead of cout, write to the file
-            outFile << n[12] << n[7] << n[8] << n[13] << n[18] << n[17] << n[16] << n[11] << n[6];
-            outFile << n[2] << n[3] << n[4] << n[9] << n[14] << n[19] << n[24] << n[23] << n[22];
-            outFile << n[21] << n[20] << n[15] << n[10] << n[5] << n[0] << "\n";
+            outFile << n[12] << n[7] << n[8] << n[13] << n[18] << n[17] << n[16] << n[11] << 
+                n[6] << n[2] << n[3] << n[4] << n[9] << n[14] << n[19] << n[24] << n[23] << 
+                n[22] << n[21] << n[20] << n[15] << n[10] << n[5] << n[0] << n[1] << std::endl;
         }
     }
 
