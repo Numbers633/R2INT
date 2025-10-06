@@ -48,9 +48,14 @@ class R2INTRules {
 public:
 	bool R2MAP[33554432] = { false };
 	void ToggleIsotropicTransition(Neighborhood n);
+
 	bool& operator[](int Index) {  // Now returns a modifiable reference
 		return R2MAP[Index];
 	}
+
+    const bool& operator[](int index) const {
+        return R2MAP[index];
+    }
 };
 
 // Rotation functions

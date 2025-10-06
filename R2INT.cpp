@@ -10,6 +10,7 @@
 #include "World.h"
 #include "OffsetStruct.h"
 #include "R2INT_File.h"
+#include "RuleEditor.h"
 
 R2INTRules globalRule;
 
@@ -90,14 +91,14 @@ int main() {
     int drawingState = 0;
     
     // Variables for the rule editor
-    Neighborhood  editorNeighborhood;
+    Neighborhood editorNeighborhood{};
     for (int i = 0; i < 25; i++)
     {
         editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
     }
 
     // Colors for multistate rules
-    sf::Color colors[11];
+    std::vector<sf::Color> colors(11);
     colors[0] = sf::Color::Black;
     colors[1] = sf::Color::White;
     colors[2] = sf::Color::Cyan;
@@ -110,7 +111,7 @@ int main() {
     colors[9] = sf::Color(255, 127, 255, 255);
     colors[10] = sf::Color(255, 255, 127, 255);
 
-    sf::Color ruleEditorColors[4];
+    std::vector<sf::Color> ruleEditorColors(4);
     ruleEditorColors[0] = sf::Color::Color(0, 64, 32);
     ruleEditorColors[1] = sf::Color::Color(224, 255, 240);
     ruleEditorColors[2] = sf::Color::Color(0, 255, 240);
@@ -310,6 +311,7 @@ int main() {
             sf::Text saveText(font, "Save Rule", 48);
             saveText.setPosition({ 730, 670 });
             saveText.setFillColor(sf::Color::Black);
+
             while (const std::optional secondEvent = secondWindow->pollEvent()) {
                 if (secondEvent->is<sf::Event::Closed>()) {
                     secondWindow->close();
@@ -380,36 +382,8 @@ int main() {
 
             if (secondWindow)
             {
-                secondWindow->clear(sf::Color::Color(0, 160, 80, 240));
-                sf::RectangleShape rc;
-                for (int i = 0; i < 5; i++)
-                {
-                    for (int j = 0; j < 5; j++)
-                    {
-                        if (i == 2 && j == 2)
-                        {
-                            rc.setFillColor(colors[editorNeighborhood[5 * j + i]]);
-                        }
-                        else
-                        {
-                            rc.setFillColor(ruleEditorColors[editorNeighborhood[5 * j + i]]);
-                        }
-                        
-                        rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
-                        rc.setSize({ 128.f, 128.f });
-                        secondWindow->draw(rc);
-                    }
-                }
-
-                int TransitionID = ConvertNeighborhoodToInt(editorNeighborhood);
-                rc.setFillColor(ruleEditorColors[globalRule[TransitionID]]);
-
-                rc.setPosition({ 976.f + 8.f, 252.f + 8.f });
-                rc.setSize({ 192.f, 192.f });
-                secondWindow->draw(rc);
-                secondWindow->draw(clearText);
-                secondWindow->draw(saveText);
-                secondWindow->display();
+                RuleEditor ruleEditor;
+                ruleEditor.Draw(secondWindow.get(), editorNeighborhood, colors, ruleEditorColors, globalRule, clearText, saveText);
             }
         }
     }

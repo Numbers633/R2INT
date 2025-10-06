@@ -138,12 +138,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);SFML_STATIC;SFML_STATIC;SFML_STATIC;%(PreprocessorDefinitions);SFML_STATIC;_DEBUG;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions);SFML_STATIC;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>C:\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions>/I "C:\SFML-3.0.0\include" %(AdditionalOptions)</AdditionalOptions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -192,6 +193,7 @@
     <ClInclude Include="R2INT_File.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="resource1.h" />
+    <ClInclude Include="RuleEditor.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="World.h" />
   </ItemGroup>
@@ -200,6 +202,7 @@
     <ClCompile Include="OffsetStruct.cpp" />
     <ClCompile Include="R2INT.cpp" />
     <ClCompile Include="R2INT_File.cpp" />
+    <ClCompile Include="RuleEditor.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
