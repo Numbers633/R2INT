@@ -35,6 +35,11 @@ struct Neighborhood {
 
 	int8_t countOuterCells() const;
 	int8_t countTotalCells() const;
+
+    short int* begin() { return std::begin(ArrayStorage); }
+    short int* end() { return std::end(ArrayStorage); }
+    const short int* begin() const { return std::begin(ArrayStorage); }
+    const short int* end() const { return std::end(ArrayStorage); }
 };
 
 // R2INT rule data structure
