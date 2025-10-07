@@ -257,3 +257,17 @@ void R2INTRules::ToggleIsotropicTransition(Neighborhood n)
 		n = RotateNeighborhoodCW(n);
 	}
 }
+
+void R2INTRules::ClearRule()
+{
+    std::cout << "Clearing rule..." << std::endl;
+    for (unsigned int i = 0; i < 33554432; i++)
+    {
+        Neighborhood n = ConvertIntToNeighborhood(i);
+        R2MAP[i] = 0;
+        if (i % PERCENT_INCREMENT == PERCENT_INCREMENT - 1)
+        {
+            std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
+        }
+    }
+}

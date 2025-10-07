@@ -4,6 +4,12 @@
 #include <cstdint>
 #include <vector>
 
+#ifdef _DEBUG
+#define PERCENT_INCREMENT 2097152
+#else
+#define PERCENT_INCREMENT 8388608
+#endif
+
 struct OffsetInfo {
 	int CellXOffset;
 	int CellYOffset;
@@ -48,6 +54,7 @@ class R2INTRules {
 public:
 	bool R2MAP[33554432] = { false };
 	void ToggleIsotropicTransition(Neighborhood n);
+    void ClearRule();
 
 	bool& operator[](int Index) {  // Now returns a modifiable reference
 		return R2MAP[Index];

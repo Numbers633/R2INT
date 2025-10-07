@@ -14,12 +14,6 @@
 
 R2INTRules globalRule;
 
-#ifdef _DEBUG
-#define PERCENT_INCREMENT 2097152
-#else
-#define PERCENT_INCREMENT 8388608
-#endif
-
 void InitializeRule()
 {
     std::cout << "Loading. . ." << std::endl;
@@ -66,6 +60,15 @@ int main() {
     World currentWorld;
     World originalWorld = currentWorld;
     std::cout << "Initialize grid complete!" << std::endl;
+
+    // Load font
+    sf::Font font;
+    if (!font.openFromFile("arial.ttf")) {
+        std::cerr << "Failed to load font!\n";
+        return -1;
+    }
+
+    RuleEditor ruleEditor;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -126,13 +129,6 @@ int main() {
 
     bool isRightMouseDown = false;
     bool isLeftMouseDown = false;
-
-    // Load font
-    sf::Font font;
-    if (!font.openFromFile("arial.ttf")) {
-        std::cerr << "Failed to load font!\n";
-        return -1;
-    }
 
     sf::Text menuText(font, "Open Rule Editor", 24);
     menuText.setPosition({ 10, 10 });
@@ -324,15 +320,7 @@ int main() {
 
                     if (mouseWindowCoords.x >= 720.f) {
                         if (clearText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos))) {
-                            for (unsigned int i = 0; i < 33554432; i++)
-                            {
-                                Neighborhood n = ConvertIntToNeighborhood(i);
-                                globalRule[i] = 0;
-                                if (i % PERCENT_INCREMENT == PERCENT_INCREMENT - 1)
-                                {
-                                    std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
-                                }
-                            }
+                            globalRule.ClearRule();
                         }
                         else if (saveText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos)))
                         {
@@ -382,7 +370,6 @@ int main() {
 
             if (secondWindow)
             {
-                RuleEditor ruleEditor;
                 ruleEditor.Draw(secondWindow.get(), editorNeighborhood, colors, ruleEditorColors, globalRule, clearText, saveText);
             }
         }
