@@ -25,4 +25,9 @@ private:
     Neighborhood editorNeighborhood{};
     sf::Text clearText;
     sf::Text saveText;
+
+    // Settings button
+    sf::Texture settingsTexture;
+    sf::Sprite settingsSprite;
+    sf::FloatRect settingsBounds;
 };

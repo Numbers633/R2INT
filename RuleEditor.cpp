@@ -8,7 +8,8 @@
 
 RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     : clearText(font, "Clear Rule", 48),
-    saveText(font, "Save Rule", 48)
+    saveText(font, "Save Rule", 48),
+    settingsSprite(settingsTexture)
 {
     static std::uniform_int_distribution<int> rnd(0, 7);
     for (int i = 0; i < 25; i++)
@@ -19,7 +20,19 @@ RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
 
     saveText.setPosition({ 730, 670 });
     saveText.setFillColor(sf::Color::Black);
+
+    // Load settings icon from file
+    if (!settingsTexture.loadFromFile("Settings.png")) {
+        std::cerr << "Failed to load settings icon from file" << std::endl;
+    }
+    settingsSprite.setTexture(settingsTexture);
+
+    sf::Rect<int> textureRect({ 0, 0 }, { 135, 135 });
+    settingsSprite.setTextureRect(textureRect);
+    settingsSprite.setPosition({ 1295.f, 10.f });
+    settingsBounds = settingsSprite.getGlobalBounds();
 }
+
 
 void RuleEditor::RandomizeNeighborhood(std::mt19937& gen) {
     static std::uniform_int_distribution<int> rnd(0, 7);
@@ -121,5 +134,6 @@ void RuleEditor::Draw(sf::RenderWindow* window,
 
     window->draw(clearText);
     window->draw(saveText);
+    window->draw(settingsSprite);
     window->display();
 }
