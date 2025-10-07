@@ -15,6 +15,8 @@ RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     for (int i = 0; i < 25; i++)
         editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
 
+    f = font;
+
     clearText.setPosition({ 730, 10 });
     clearText.setFillColor(sf::Color::Black);
 
@@ -139,9 +141,66 @@ void RuleEditor::Draw(sf::RenderWindow* window,
         window->draw(rc);
     }
     else if (screen == 1) {
-        window->clear(sf::Color(100, 120, 115, 255));
-        window->draw(clearText);
-        window->draw(saveText);
+        window->clear(sf::Color(50, 65, 60, 255));
+
+        // Grid parameters
+        const int rows = 5;
+        const int cols = 2;
+        const float boxWidth = 544.f;
+        const float boxHeight = 96.f;
+        const float startX = 72.f;   // top-left x
+        const float startY = 72.f;   // top-left y
+        const float spacingX = 72.f; // horizontal spacing
+        const float spacingY = 24.f; // vertical spacing
+
+        sf::RectangleShape box(sf::Vector2f(boxWidth, boxHeight));
+        box.setFillColor(sf::Color(200, 200, 200, 255)); // light grey
+        box.setOutlineColor(sf::Color::Black);
+        box.setOutlineThickness(2.f);
+
+        sf::Text label(f, "", 80);
+        label.setFillColor(sf::Color::Black);
+
+        // Texts for specific boxes
+        std::vector<std::string> boxTexts = {
+            "Clear", "Save", "Load", "Set Rule", "Rand Rule", "Mutate", "Set Nhood", "Set States", "Set Dimension", "Set Symmetry"
+        };
+
+        // Draw the 2x4 grid
+        for (int row = 0; row < rows; ++row) {
+            for (int col = 0; col < cols; ++col) {
+                int index = row * cols + col;
+
+                // Position the box
+                box.setPosition(
+                    { startX + col * (boxWidth + spacingX),
+                    startY + row * (boxHeight + spacingY) }
+                );
+
+                // Set individual color
+                if (index == 0) box.setFillColor(sf::Color::Red);      // e.g., Clear
+                else if (index == 1) box.setFillColor(sf::Color::Green); // e.g., Save
+                else if (index == 2) box.setFillColor(sf::Color::Blue);  // e.g., Load
+                else box.setFillColor(sf::Color(200, 200, 200));        // default gray
+
+                window->draw(box);
+
+                // Draw label if it exists
+                if (!boxTexts[index].empty()) {
+                    label.setString(boxTexts[index]);
+
+                    // Center label inside box
+                    sf::FloatRect textBounds = label.getLocalBounds();
+                    label.setOrigin(textBounds.getCenter());
+                    label.setPosition(
+                        { startX + col * (boxWidth + spacingX) + boxWidth / 2.f,
+                        startY + row * (boxHeight + spacingY) + boxHeight / 2.f }
+                    );
+
+                    window->draw(label);
+                }
+            }
+        }
     }
 
     window->draw(settingsSprite);

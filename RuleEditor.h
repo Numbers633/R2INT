@@ -34,5 +34,7 @@ private:
     sf::Sprite settingsSprite;
     sf::FloatRect settingsBounds;
 
+    sf::Font f;
+
     short int screen = 0; // 0 = main editor, 1 = settings
 };
