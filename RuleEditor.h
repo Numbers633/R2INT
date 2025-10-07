@@ -11,6 +11,9 @@ class RuleEditor {
 public:
     RuleEditor(std::mt19937& gen, const sf::Font& font);
 
+    short int GetScreen() const { return screen; };
+    void SetScreen(short int s) { screen = s; };
+
     void RandomizeNeighborhood(std::mt19937& gen);
     void HandleEvent(const sf::Event& event,
         R2INTRules& globalRule,
@@ -30,4 +33,6 @@ private:
     sf::Texture settingsTexture;
     sf::Sprite settingsSprite;
     sf::FloatRect settingsBounds;
+
+    short int screen = 0; // 0 = main editor, 1 = settings
 };

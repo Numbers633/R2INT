@@ -56,9 +56,14 @@ void RuleEditor::HandleEvent(const sf::Event& event,
         // Now you can test buttons
         if (clearText.getGlobalBounds().contains(mouseCoords)) {
             globalRule.ClearRule();
+            SetScreen(0);
         }
         else if (saveText.getGlobalBounds().contains(mouseCoords)) {
             SaveTor2intFile(globalRule);
+        }
+        else if (settingsBounds.contains(mouseCoords)) {
+            if (screen == 0) screen = 1;
+            else screen = 0;
         }
         else if (mouseCoords.x >= 720.f) {  // clicking on the “result cell” area
             globalRule.ToggleIsotropicTransition(editorNeighborhood);
@@ -104,36 +109,41 @@ void RuleEditor::Draw(sf::RenderWindow* window,
     const R2INTRules& globalRule)
 {
     if (!window) return;
+    
+    if (screen == 0) {
+        window->clear(sf::Color(0, 160, 80, 255));
+        sf::RectangleShape rc;
 
-    window->clear(sf::Color(0, 160, 80, 240));
-    sf::RectangleShape rc;
+        // Draw the 5x5 grid of cells
+        for (int j = 0; j < 5; j++) {
+            for (int i = 0; i < 5; i++) {
+                int index = 5 * j + i;
 
-    // Draw the 5x5 grid of cells
-    for (int j = 0; j < 5; j++) {
-        for (int i = 0; i < 5; i++) {
-            int index = 5 * j + i;
+                if (i == 2 && j == 2) // Center cell
+                    rc.setFillColor(colors[editorNeighborhood[index]]);
+                else // Other cells
+                    rc.setFillColor(ruleEditorColors[editorNeighborhood[index]]);
 
-            if (i == 2 && j == 2) // Center cell
-                rc.setFillColor(colors[editorNeighborhood[index]]);
-            else // Other cells
-                rc.setFillColor(ruleEditorColors[editorNeighborhood[index]]);
-
-            rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
-            rc.setSize({ 128.f, 128.f });
-            window->draw(rc);
+                rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
+                rc.setSize({ 128.f, 128.f });
+                window->draw(rc);
+            }
         }
+
+        int TransitionID = ConvertNeighborhoodToInt(editorNeighborhood);
+        rc.setFillColor(ruleEditorColors[globalRule[TransitionID]]);
+
+        // Draw the resulting cell state
+        rc.setPosition({ 984.f, 260.f });
+        rc.setSize({ 192.f, 192.f });
+        window->draw(rc);
+    }
+    else if (screen == 1) {
+        window->clear(sf::Color(100, 120, 115, 255));
+        window->draw(clearText);
+        window->draw(saveText);
     }
 
-    int TransitionID = ConvertNeighborhoodToInt(editorNeighborhood);
-    rc.setFillColor(ruleEditorColors[globalRule[TransitionID]]);
-
-    // Draw the resulting cell state
-    rc.setPosition({ 984.f, 260.f });
-    rc.setSize({ 192.f, 192.f });
-    window->draw(rc);
-
-    window->draw(clearText);
-    window->draw(saveText);
     window->draw(settingsSprite);
     window->display();
 }
