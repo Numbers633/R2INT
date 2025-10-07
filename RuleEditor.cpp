@@ -1,15 +1,94 @@
+// RuleEditor.cpp
 #include "RuleEditor.h"
+#include "R2INT_File.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <random>
+#include <iostream>
 
-RuleEditor::RuleEditor() = default;
+RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
+    : clearText(font, "Clear Rule", 48),
+    saveText(font, "Save Rule", 48)
+{
+    static std::uniform_int_distribution<int> rnd(0, 7);
+    for (int i = 0; i < 25; i++)
+        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
+
+    clearText.setPosition({ 730, 10 });
+    clearText.setFillColor(sf::Color::Black);
+
+    saveText.setPosition({ 730, 670 });
+    saveText.setFillColor(sf::Color::Black);
+}
+
+void RuleEditor::RandomizeNeighborhood(std::mt19937& gen) {
+    static std::uniform_int_distribution<int> rnd(0, 7);
+
+    for (int i = 0; i < 25; i++)
+        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
+}
+
+void RuleEditor::HandleEvent(const sf::Event& event,
+    R2INTRules& globalRule,
+    std::mt19937& gen,
+    sf::RenderWindow& window)
+{
+    const bool INVERT_CONTROLS = true;
+    int dx = 0, dy = 0;
+
+    if (event.is<sf::Event::MouseButtonPressed>()) {
+        sf::Vector2i pixelPos = sf::Mouse::getPosition(window);  // window-relative
+        sf::Vector2f mouseCoords = window.mapPixelToCoords(pixelPos);  // convert to world/UI coords
+
+        // Now you can test buttons
+        if (clearText.getGlobalBounds().contains(mouseCoords)) {
+            globalRule.ClearRule();
+        }
+        else if (saveText.getGlobalBounds().contains(mouseCoords)) {
+            SaveTor2intFile(globalRule);
+        }
+        else if (mouseCoords.x >= 720.f) {  // clicking on the “result cell” area
+            globalRule.ToggleIsotropicTransition(editorNeighborhood);
+        }
+        else {
+            // grid editing logic here
+            int modifyID = static_cast<int>(mouseCoords.x / 144) + 5 * static_cast<int>(mouseCoords.y / 144);
+            editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
+        }
+    }
+    if (event.is<sf::Event::KeyPressed>()) {
+        auto key = event.getIf<sf::Event::KeyPressed>()->code;
+
+        switch (key) {
+        case sf::Keyboard::Key::R:
+            RandomizeNeighborhood(gen);
+            break;
+        case sf::Keyboard::Key::Left:
+            dx = INVERT_CONTROLS ? 1 : -1;
+            break;
+        case sf::Keyboard::Key::Right:
+            dx = INVERT_CONTROLS ? -1 : 1;
+            break;
+        case sf::Keyboard::Key::Up:
+            dy = INVERT_CONTROLS ? 1 : -1;
+            break;
+        case sf::Keyboard::Key::Down:
+            dy = INVERT_CONTROLS ? -1 : 1;
+            break;
+        default:
+            break;
+        }
+
+        if (dx != 0 || dy != 0)
+            editorNeighborhood = ShiftNeighborhood(editorNeighborhood, dx, dy);
+    }
+}
+
 
 void RuleEditor::Draw(sf::RenderWindow* window,
-    const Neighborhood editorNeighborhood,
     const std::vector<sf::Color>& colors,
     const std::vector<sf::Color>& ruleEditorColors,
-    const R2INTRules& globalRule,
-    const sf::Text& clearText,
-    const sf::Text& saveText)
+    const R2INTRules& globalRule)
 {
     if (!window) return;
 

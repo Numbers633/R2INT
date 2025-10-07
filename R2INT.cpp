@@ -68,11 +68,11 @@ int main() {
         return -1;
     }
 
-    RuleEditor ruleEditor;
-
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> rnd(0, 7);
+
+    RuleEditor ruleEditor(gen, font);
 
     //
     // Playback variables
@@ -92,13 +92,6 @@ int main() {
 
     // Edit variables
     int drawingState = 0;
-    
-    // Variables for the rule editor
-    Neighborhood editorNeighborhood{};
-    for (int i = 0; i < 25; i++)
-    {
-        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
-    }
 
     // Colors for multistate rules
     std::vector<sf::Color> colors(11);
@@ -301,76 +294,19 @@ int main() {
         window.display();
 
         if (secondWindow && secondWindow->isOpen()) {
-            sf::Text clearText(font, "Clear Rule", 48);
-            clearText.setPosition({ 730, 10 });
-            clearText.setFillColor(sf::Color::Black);
-            sf::Text saveText(font, "Save Rule", 48);
-            saveText.setPosition({ 730, 670 });
-            saveText.setFillColor(sf::Color::Black);
-
             while (const std::optional secondEvent = secondWindow->pollEvent()) {
                 if (secondEvent->is<sf::Event::Closed>()) {
                     secondWindow->close();
                     secondWindow.reset();  // Properly close and delete the second window
                     break;
                 }
-                else if (secondEvent->is<sf::Event::MouseButtonPressed>()) {
-                    sf::Vector2i pixelPos = sf::Mouse::getPosition(*secondWindow);
-                    sf::Vector2f mouseWindowCoords = secondWindow->mapPixelToCoords(pixelPos, secondWindow->getDefaultView());
 
-                    if (mouseWindowCoords.x >= 720.f) {
-                        if (clearText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos))) {
-                            globalRule.ClearRule();
-                        }
-                        else if (saveText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos)))
-                        {
-                            SaveTor2intFile(globalRule);
-                        }
-                        else
-                        {
-                            globalRule.ToggleIsotropicTransition(editorNeighborhood);
-                        }
-                    }
-                    else
-                    {
-                        int modifyID = floor(mouseWindowCoords.x / 144) + 5 * floor(mouseWindowCoords.y / 144);
-                        editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
-                    }
-                }
-                else if (secondEvent->is<sf::Event::KeyPressed>()) {
-                    const bool INVERT_CONTROLS = true;
-                    int dx = 0, dy = 0;
-
-                    sf::Keyboard::Key keyPress = secondEvent->getIf<sf::Event::KeyPressed>()->code;
-                    if (keyPress == sf::Keyboard::Key::R)
-                    {
-                        for (int i = 0; i < 25; i++)
-                        {
-                            editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
-                        }
-                    }
-                    else  if (keyPress == sf::Keyboard::Key::Left) {
-                        dx = INVERT_CONTROLS ? 1 : -1;
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Right) {
-                        dx = INVERT_CONTROLS ? -1 : 1;
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Up) {
-                        dy = INVERT_CONTROLS ? 1 : -1;
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Down) {
-                        dy = INVERT_CONTROLS ? -1 : 1;
-                    }
-
-                    if (dx != 0 || dy != 0) {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, dx, dy);
-                    }
-                }
+                ruleEditor.HandleEvent(*secondEvent, globalRule, gen, *secondWindow);
             }
 
             if (secondWindow)
             {
-                ruleEditor.Draw(secondWindow.get(), editorNeighborhood, colors, ruleEditorColors, globalRule, clearText, saveText);
+                ruleEditor.Draw(secondWindow.get(), colors, ruleEditorColors, globalRule);
             }
         }
     }
