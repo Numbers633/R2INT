@@ -203,8 +203,8 @@ void RuleEditor::Draw(sf::RenderWindow* window,
                 );
 
                 // Set individual color
-                if (index <= 1) box.setFillColor(sf::Color(100,255,170));      // Implemented actions
-                else box.setFillColor(sf::Color(255, 255, 255));               // Not implemented actions
+                if (index <= 2) box.setFillColor(sf::Color(100,255,170));      // Implemented actions
+                else box.setFillColor(sf::Color(0, 30, 15));               // Not implemented actions
 
                 // Colors: 40,200,120 for hovering over; 100,255,170 normal; 0,30,15 not implemented
 

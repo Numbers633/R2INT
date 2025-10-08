@@ -70,6 +70,7 @@ Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs);
 Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs);
 Neighborhood MirrorNeighborhoodHorizontally(const Neighborhood& lhs);
 Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs);
+std::vector<Neighborhood> GetAllSymmetries(const Neighborhood& n);
 // Shifting functions
 Neighborhood ShiftNeighborhood(const Neighborhood& lhs, int dx, int dy);
 // Conversion functions

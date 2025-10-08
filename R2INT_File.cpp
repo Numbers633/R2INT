@@ -94,9 +94,13 @@ void LoadFromr2intFile(R2INTRules& loadRule)
             std::cerr << "Warning: Skipping invalid line (center cell state > 1): " << line << std::endl;
             continue;
         }
-        int index = ConvertNeighborhoodToInt(n);
-        int lowestIndex = FindLowestNeighborhoodValue(index);
-        loadRule[lowestIndex] = 1;
+
+        // Set rule for all symmetric variants
+        for (const auto& variant : GetAllSymmetries(n))
+        {
+            int index = ConvertNeighborhoodToInt(variant);
+            loadRule[index] = 1;
+        }
     }
     inFile.close();
     std::cout << "Load complete!" << std::endl;

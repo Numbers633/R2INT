@@ -60,6 +60,29 @@ inline Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs)
 
 	return ret;
 }
+
+// Generate all 8 rotations and reflections of a neighborhood
+std::vector<Neighborhood> GetAllSymmetries(const Neighborhood& n)
+{
+    std::vector<Neighborhood> result;
+    result.reserve(8);
+
+    // Base rotations
+    Neighborhood r0 = n;
+    Neighborhood r1 = RotateNeighborhoodCW(r0);
+    Neighborhood r2 = RotateNeighborhoodCCW(r0);
+    Neighborhood r3 = RotateNeighborhoodCW(r1);
+
+    // Reflections of each rotation (horizontal mirror)
+    Neighborhood f0 = MirrorNeighborhoodHorizontally(r0);
+    Neighborhood f1 = MirrorNeighborhoodHorizontally(r1);
+    Neighborhood f2 = MirrorNeighborhoodHorizontally(r2);
+    Neighborhood f3 = MirrorNeighborhoodHorizontally(r3);
+
+    result = { r0, r1, r2, r3, f0, f1, f2, f3 };
+    return result;
+}
+
 //
 // Shift the neighborhood, useful for creating rules
 //
