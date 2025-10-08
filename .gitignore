@@ -401,3 +401,4 @@ FodyWeavers.xsd
 
 # Ignore r2int rule files
 *.r2int
+*.r2int
