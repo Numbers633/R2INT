@@ -177,7 +177,7 @@ void RuleEditor::Draw(sf::RenderWindow* window,
         window->draw(rc);
     }
     else if (screen == 1) {
-        window->clear(sf::Color(50, 65, 60, 255));
+        window->clear(sf::Color(0, 120, 60, 255));
 
         sf::RectangleShape box(sf::Vector2f(boxWidth, boxHeight));
         box.setOutlineColor(sf::Color::Black);
@@ -203,8 +203,10 @@ void RuleEditor::Draw(sf::RenderWindow* window,
                 );
 
                 // Set individual color
-                if (index <= 1) box.setFillColor(sf::Color(0,224,224));      // Implemented actions
-                else box.setFillColor(sf::Color(112, 0, 224));               // Not implemented actions
+                if (index <= 1) box.setFillColor(sf::Color(100,255,170));      // Implemented actions
+                else box.setFillColor(sf::Color(255, 255, 255));               // Not implemented actions
+
+                // Colors: 40,200,120 for hovering over; 100,255,170 normal; 0,30,15 not implemented
 
                 window->draw(box);
 

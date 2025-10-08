@@ -77,23 +77,18 @@ void LoadFromr2intFile(R2INTRules& loadRule)
             continue;
         }
         Neighborhood n;
+        const int perm[25] = {
+        12, 7, 8, 13, 18, 17, 16, 11, 6, 2,
+         3,  4, 9, 14, 19, 24, 23, 22, 21, 20,
+        15, 10, 5,  0,  1
+        };
+
         for (int i = 0; i < 25; i++)
         {
-            if (line[i] == '0')
-            {
-                n[i] = 0;
-            }
-            else if (line[i] == '1')
-            {
-                n[i] = 1;
-            }
-            else
-            {
-                std::cerr << "Warning: Skipping invalid line (invalid character): " << line << std::endl;
-                std::fill(std::begin(n), std::end(n), 0);
-                break;
-            }
+            int bit = (line[i] == '1') ? 1 : 0;
+            n[perm[i]] = bit;
         }
+
         if (n[12] > 1)
         {
             std::cerr << "Warning: Skipping invalid line (center cell state > 1): " << line << std::endl;
