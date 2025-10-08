@@ -91,7 +91,7 @@ void RuleEditor::HandleEvent(const sf::Event& event,
                             screen = 0;
                         }
                         else if (index == 2) { // Load
-                            std::cout << "Loading rule is not yet implemented.";
+                            LoadFromr2intFile(globalRule);
                             screen = 0;
                         }
 
@@ -188,7 +188,7 @@ void RuleEditor::Draw(sf::RenderWindow* window,
 
         // Texts for specific boxes
         std::vector<std::string> boxTexts = {
-            "Clear", "Save", "Load", "Set Rule", "Rand Rule", "Mutate", "Set Nhood", "Set States", "Set Dimension", "Set Symmetry"
+            "Clear", "Save", "Load", "Set Rule", "Rand Rule", "Mutate", "Set Nbrhood", "Set States", "Set Dimension", "Set Symmetry"
         };
 
         // Draw the 2x4 grid
