@@ -35,6 +35,15 @@ RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     settingsBounds = settingsSprite.getGlobalBounds();
 }
 
+// Grid parameters
+const int rows = 5;
+const int cols = 2;
+const float boxWidth = 544.f;
+const float boxHeight = 96.f;
+const float startX = 72.f;   // top-left x
+const float startY = 72.f;   // top-left y
+const float spacingX = 72.f; // horizontal spacing
+const float spacingY = 24.f; // vertical spacing
 
 void RuleEditor::RandomizeNeighborhood(std::mt19937& gen) {
     static std::uniform_int_distribution<int> rnd(0, 7);
@@ -55,25 +64,52 @@ void RuleEditor::HandleEvent(const sf::Event& event,
         sf::Vector2i pixelPos = sf::Mouse::getPosition(window);  // window-relative
         sf::Vector2f mouseCoords = window.mapPixelToCoords(pixelPos);  // convert to world/UI coords
 
-        // Now you can test buttons
-        if (clearText.getGlobalBounds().contains(mouseCoords)) {
-            globalRule.ClearRule();
-            SetScreen(0);
-        }
-        else if (saveText.getGlobalBounds().contains(mouseCoords)) {
-            SaveTor2intFile(globalRule);
-        }
-        else if (settingsBounds.contains(mouseCoords)) {
+        if (settingsBounds.contains(mouseCoords)) {
             if (screen == 0) screen = 1;
             else screen = 0;
         }
-        else if (mouseCoords.x >= 720.f) {  // clicking on the “result cell” area
-            globalRule.ToggleIsotropicTransition(editorNeighborhood);
+        else if (screen == 1) { // In settings screen, any click returns to main editor
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    int index = r * cols + c;
+
+                    float boxX = startX + c * (boxWidth + spacingX);
+                    float boxY = startY + r * (boxHeight + spacingY);
+
+                    sf::FloatRect bounds({ boxX, boxY }, { boxWidth, boxHeight });
+
+                    if (bounds.contains(mouseCoords)) {
+                        std::cout << "Clicked box: " << index << std::endl;
+
+                        // Handle specific actions
+                        if (index == 0) { // Clear
+                            globalRule.ClearRule();
+                            screen = 0;
+                        }
+                        else if (index == 1) { // Save
+                            SaveTor2intFile(globalRule);
+                            screen = 0;
+                        }
+                        else if (index == 2) { // Load
+                            std::cout << "Loading rule is not yet implemented.";
+                            screen = 0;
+                        }
+
+                        // You can add more actions for other boxes here
+                    }
+                }
+            }
         }
-        else {
-            // grid editing logic here
-            int modifyID = static_cast<int>(mouseCoords.x / 144) + 5 * static_cast<int>(mouseCoords.y / 144);
-            editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
+        else if (screen == 0)
+        {
+            if (mouseCoords.x >= 720.f) {  // clicking on the “result cell” area
+                globalRule.ToggleIsotropicTransition(editorNeighborhood);
+            }
+            else {
+                // grid editing logic here
+                int modifyID = static_cast<int>(mouseCoords.x / 144) + 5 * static_cast<int>(mouseCoords.y / 144);
+                editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
+            }
         }
     }
     if (event.is<sf::Event::KeyPressed>()) {
@@ -143,18 +179,7 @@ void RuleEditor::Draw(sf::RenderWindow* window,
     else if (screen == 1) {
         window->clear(sf::Color(50, 65, 60, 255));
 
-        // Grid parameters
-        const int rows = 5;
-        const int cols = 2;
-        const float boxWidth = 544.f;
-        const float boxHeight = 96.f;
-        const float startX = 72.f;   // top-left x
-        const float startY = 72.f;   // top-left y
-        const float spacingX = 72.f; // horizontal spacing
-        const float spacingY = 24.f; // vertical spacing
-
         sf::RectangleShape box(sf::Vector2f(boxWidth, boxHeight));
-        box.setFillColor(sf::Color(200, 200, 200, 255)); // light grey
         box.setOutlineColor(sf::Color::Black);
         box.setOutlineThickness(2.f);
 
@@ -178,10 +203,8 @@ void RuleEditor::Draw(sf::RenderWindow* window,
                 );
 
                 // Set individual color
-                if (index == 0) box.setFillColor(sf::Color::Red);      // e.g., Clear
-                else if (index == 1) box.setFillColor(sf::Color::Green); // e.g., Save
-                else if (index == 2) box.setFillColor(sf::Color::Blue);  // e.g., Load
-                else box.setFillColor(sf::Color(200, 200, 200));        // default gray
+                if (index <= 1) box.setFillColor(sf::Color(0,224,224));      // Implemented actions
+                else box.setFillColor(sf::Color(112, 0, 224));               // Not implemented actions
 
                 window->draw(box);
 
