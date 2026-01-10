@@ -189,11 +189,22 @@ void Chunk::Simulate(const R2INTRules& rules, World& world)
             {
                 for (int dx = -2; dx <= 2; dx++)
                 {
-                    int gx = CoordinateX * GRID_DIMENSIONS + x + dx;
-                    int gy = CoordinateY * GRID_DIMENSIONS + y + dy;
+                    int local_x = x + dx;
+                    int local_y = y + dy;
+                    int state = 0;
 
-                    // Assume OldVoidState
-                    int state = world.GetCellStateAtOld({ gx, gy }); // <-- Use OldGrid
+                    if (local_x < 0 || local_x >= GRID_DIMENSIONS || local_y < 0 || local_y >= GRID_DIMENSIONS)
+                    {
+                        int global_x = CoordinateX * GRID_DIMENSIONS + local_x;
+                        int global_y = CoordinateY * GRID_DIMENSIONS + local_y;
+
+                        state = world.GetCellStateAtOld({ global_x, global_y });
+                    }
+                    else
+                    {
+                        state = Grid[local_x][local_y];
+                    }
+                    
 
                     neighborhoodInt += state * weight;
                     weight >>= 1;
