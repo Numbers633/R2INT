@@ -1,6 +1,8 @@
 #include "World.h"
 #include <iostream>
 
+#define DEBUG_BG
+
 World::World() {
     Chunk initial;
     initial.CoordinateX = 0;
@@ -137,6 +139,7 @@ void World::Simulate(const R2INTRules& Rules) {
         grid.ResetOld();
     }
 
+
     // Save DeleteEmptyGrids for last to prevent issues during simulation
     DeleteEmptyGrids(contents, VoidState);
 
@@ -205,7 +208,7 @@ void World::Draw(sf::RenderWindow& window, float cellSize, const std::vector<sf:
         float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
         float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
 
-#ifdef _DEBUG
+#ifdef DEBUG_BG
         // Deterministic debug background color
         std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
         unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 32);

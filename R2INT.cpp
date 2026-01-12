@@ -115,6 +115,7 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode({ 640, 640 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
+    window.setFramerateLimit(60);
 
     // Camera variables
     sf::Vector2f previousMousePosition;
