@@ -12,8 +12,8 @@ struct World {
     void LinkAllNeighbors();
 
     Chunk* GetNeighborGrid(int x, int y);
-    __int8 GetCellStateAt(sf::Vector2i p); // Uses Grid
-    __int8 GetCellStateAtOld(sf::Vector2i p); // Uses OldGrid
+    __int8 GetCellStateAt(sf::Vector2i p) const; // Uses Grid
+    __int8 GetCellStateAtOld(sf::Vector2i p) const; // Uses OldGrid
 
     void EnsureAllPotentialNeighborGridsExist();
 

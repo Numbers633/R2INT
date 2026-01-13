@@ -1,7 +1,7 @@
 #include "World.h"
 #include <iostream>
 
-#define DEBUG_BG
+//#define DEBUG_BG
 
 World::World() {
     Chunk initial;
@@ -42,7 +42,7 @@ void World::PaintAtCell(sf::Vector2i p, int newState)
     }
 }
 
-__int8 World::GetCellStateAt(sf::Vector2i p)
+__int8 World::GetCellStateAt(sf::Vector2i p) const
 {
     // Determine which grid the cell is in
     int gx = (p.x >= 0) ? p.x / GRID_DIMENSIONS : (p.x - GRID_DIMENSIONS + 1) / GRID_DIMENSIONS;
@@ -62,7 +62,7 @@ __int8 World::GetCellStateAt(sf::Vector2i p)
     return VoidState;
 }
 
-__int8 World::GetCellStateAtOld(sf::Vector2i p)
+__int8 World::GetCellStateAtOld(sf::Vector2i p) const
 {
     // Determine which grid the cell is in
     int gx = (p.x >= 0) ? p.x / GRID_DIMENSIONS : (p.x - GRID_DIMENSIONS + 1) / GRID_DIMENSIONS;
@@ -299,5 +299,51 @@ sf::IntRect World::GetRect() const
 void World::PrintRLE() const
 {
     sf::IntRect rect = GetRect();
-    std::cout << "x = " << rect.size.x << ", y = " << rect.size.y << std::endl;
+    std::cout << "x = " << rect.size.x << ", y = " << rect.size.y << ", rule = undefined" << std::endl;
+    std::string rle;
+
+    for (int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
+    {
+        int runCount = 0;
+        char runChar = 0;
+
+        if (y > rect.position.y)
+            rle += '$';
+
+        for (int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
+        {
+            bool alive = GetCellStateAt({ x, y }) != 0;
+            char c = alive ? 'o' : 'b';
+
+            if (runCount == 0)
+            {
+                runChar = c;
+                runCount = 1;
+            }
+            else if (c == runChar)
+            {
+                runCount++;
+            }
+            else
+            {
+                if (runCount > 1)
+                    rle += std::to_string(runCount);
+                rle += runChar;
+
+                runChar = c;
+                runCount = 1;
+            }
+        }
+
+        // Flush row
+        if (runCount > 0 && runChar != 'b')
+        {
+            if (runCount > 1)
+                rle += std::to_string(runCount);
+            rle += runChar;
+        }
+    }
+
+    rle += '!';
+    std::cout << rle << std::endl;
 }

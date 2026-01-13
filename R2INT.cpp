@@ -87,7 +87,7 @@ int main() {
     int generation = 0;
     float elapsedTime = 0.0f;
 
-    float cellSize = 10.f;
+    float cellSize = 40.f;
     int n_states = 2;
 
     // Edit variables
@@ -245,7 +245,7 @@ int main() {
         while (accumulator >= timeStep) {
             generation++;
             currentWorld.Simulate(globalRule);
-            currentWorld.PrintRLE();
+            //currentWorld.PrintRLE();
             
             accumulator -= timeStep;
         }
@@ -254,9 +254,9 @@ int main() {
         elapsedTime += deltaTime;
         frameCount++;
 
-        if (elapsedTime >= 10.f)
+        if (elapsedTime >= 32.f)
         {
-            std::cout << "FPS: " << frameCount / 10.f << std::endl;
+            std::cout << "FPS: " << frameCount / 32.f << std::endl;
             elapsedTime = 0.0f;
             frameCount = 0;
         }
