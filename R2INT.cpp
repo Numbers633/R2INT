@@ -1,5 +1,3 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
 #include <array>
 #include <filesystem>
 #include <iostream>
@@ -11,6 +9,7 @@
 #include "OffsetStruct.h"
 #include "R2INT_File.h"
 #include "RuleEditor.h"
+#include "gui.h"
 
 R2INTRules globalRule;
 
@@ -133,6 +132,9 @@ int main() {
     view.setCenter({ view.getSize().x / 2 , view.getSize().y / 2});
 
     sf::View uiView;
+
+    // Testing buttons
+    Button b;
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
@@ -293,6 +295,7 @@ int main() {
         // Draw UI
         window.setView(uiView);
         window.draw(menuText);
+        b.Draw(window);
 
         window.display();
 
