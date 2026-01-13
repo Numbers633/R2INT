@@ -54,9 +54,9 @@ struct Chunk {
 	bool NeedsNeighbors(__int8 voidState) const;
 
     // GetRect member functions; returns local coordinates
-    int getTop();
-    int getBottom();
-    int getLeft();
-    int getRight();
-    sf::IntRect GetRect();
+    int getTop() const;
+    int getBottom() const;
+    int getLeft() const;
+    int getRight() const;
+    sf::IntRect GetRect() const;
 };

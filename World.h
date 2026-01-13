@@ -20,6 +20,10 @@ struct World {
     __int8 VoidState = 0; // Default state for empty space
 
     void Draw(sf::RenderWindow& window, float cellSize, const std::vector<sf::Color>& colors);
+
+    // GetRect function; returns global coordinates
+    sf::IntRect GetRect() const;
+    void PrintRLE() const;
 };
 
 void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap, __int8 VoidState);

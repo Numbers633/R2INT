@@ -245,6 +245,8 @@ int main() {
         while (accumulator >= timeStep) {
             generation++;
             currentWorld.Simulate(globalRule);
+            currentWorld.PrintRLE();
+            
             accumulator -= timeStep;
         }
 

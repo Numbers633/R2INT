@@ -226,7 +226,7 @@ void Chunk::Simulate(const R2INTRules& rules, World& world)
 }
 
 // Components of GetRect
-int Chunk::getTop() {
+int Chunk::getTop() const {
     for (int y = 0; y < GRID_DIMENSIONS; y++) {
         for (int x = 0; x < GRID_DIMENSIONS; x++) {
             if (Grid[x][y] != 0) {
@@ -234,10 +234,10 @@ int Chunk::getTop() {
             }
         }
     }
-    return -1;
+    return 0;
 }
 
-int Chunk::getBottom() {
+int Chunk::getBottom() const {
     for (int y = GRID_DIMENSIONS - 1; y >= 0; y--) {
         for (int x = 0; x < GRID_DIMENSIONS; x++) {
             if (Grid[x][y] != 0) {
@@ -245,10 +245,10 @@ int Chunk::getBottom() {
             }
         }
     }
-    return -1;
+    return 0;
 }
 
-int Chunk::getLeft() {
+int Chunk::getLeft() const {
     for (int x = 0; x < GRID_DIMENSIONS; x++) {
         for (int y = 0; y < GRID_DIMENSIONS; y++) {
             if (Grid[x][y] != 0) {
@@ -256,10 +256,10 @@ int Chunk::getLeft() {
             }
         }
     }
-    return -1;
+    return 0;
 }
 
-int Chunk::getRight() {
+int Chunk::getRight() const {
     for (int x = GRID_DIMENSIONS - 1; x >= 0; x--) {
         for (int y = 0; y < GRID_DIMENSIONS; y++) {
             if (Grid[x][y] != 0) {
@@ -267,10 +267,10 @@ int Chunk::getRight() {
             }
         }
     }
-    return -1;
+    return 0;
 }
 
-sf::IntRect Chunk::GetRect() {
+sf::IntRect Chunk::GetRect() const {
     int top = getTop();
     int bottom = getBottom();
     int left = getLeft();

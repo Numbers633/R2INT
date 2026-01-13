@@ -249,3 +249,55 @@ void World::Draw(sf::RenderWindow& window, float cellSize, const std::vector<sf:
 
     window.draw(vertexArray);
 }
+
+sf::IntRect World::GetRect() const
+{
+    bool foundAny = false;
+
+    int minLeft = 0;
+    int minTop = 0;
+    int maxRight = 0;
+    int maxBottom = 0;
+
+    for (const auto& [coord, chunk] : contents)
+    {
+        sf::IntRect r = chunk.GetRect();
+        if (r.size.x < 0 || r.size.y < 0)
+            continue; // empty chunk
+        int globalLeft = chunk.CoordinateX * GRID_DIMENSIONS + r.position.x;
+        int globalTop = chunk.CoordinateY * GRID_DIMENSIONS + r.position.y;
+
+        int globalRight = globalLeft + r.size.x;
+        int globalBottom = globalTop + r.size.y;
+
+        if (!foundAny)
+        {
+            minLeft = globalLeft;
+            minTop = globalTop;
+            maxRight = globalRight;
+            maxBottom = globalBottom;
+            foundAny = true;
+        }
+        else
+        {
+            minLeft = std::min(minLeft, globalLeft);
+            minTop = std::min(minTop, globalTop);
+            maxRight = std::max(maxRight, globalRight);
+            maxBottom = std::max(maxBottom, globalBottom);
+        }
+    }
+
+    if (!foundAny)
+        return sf::IntRect({ -1, -1 }, { -1, -1 });
+
+    return sf::IntRect(
+        { minLeft, minTop },
+        { maxRight - minLeft, maxBottom - minTop }
+    );
+}
+
+void World::PrintRLE() const
+{
+    sf::IntRect rect = GetRect();
+    std::cout << "x = " << rect.size.x << ", y = " << rect.size.y << std::endl;
+}
