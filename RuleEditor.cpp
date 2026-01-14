@@ -24,7 +24,7 @@ RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     saveText.setFillColor(sf::Color::Black);
 
     // Load settings icon from file
-    if (!settingsTexture.loadFromFile("Settings.png")) {
+    if (!settingsTexture.loadFromFile("assets\\Settings.png")) {
         std::cerr << "Failed to load settings icon from file" << std::endl;
     }
     settingsSprite.setTexture(settingsTexture);

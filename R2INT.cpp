@@ -62,7 +62,7 @@ int main() {
 
     // Load font
     sf::Font font;
-    if (!font.openFromFile("arial.ttf")) {
+    if (!font.openFromFile("assets\\arial.ttf")) {
         std::cerr << "Failed to load font!\n";
         return -1;
     }
@@ -143,13 +143,16 @@ int main() {
     auto PlayPause = [&]() {
         isPlaying = !isPlaying;
         sf::Color playColor = isPlaying ? sf::Color(0, 192, 96) : sf::Color(0, 255, 128);
+        sf::Texture& texture = isPlaying ? mainGui.pauseTex : mainGui.playTex;
         mainGui.playButton.setColor(playColor);
+        mainGui.playButton.SetIcon(texture);
         };
     auto Reset = [&]() {
         currentWorld = originalWorld;
         generation = 0;
         isPlaying = false;
         mainGui.playButton.setColor(sf::Color(0, 255, 128));
+        mainGui.playButton.SetIcon(mainGui.playTex);
         };
     mainGui.playButton.SetCallback(PlayPause);
     mainGui.resetButton.SetCallback(Reset);

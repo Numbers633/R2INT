@@ -212,11 +212,7 @@
     <ResourceCompile Include="R2INT.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="AliveCell.bmp" />
-    <Image Include="BirthCell.bmp" />
     <Image Include="bitmap1.bmp" />
-    <Image Include="DeadCell.bmp" />
-    <Image Include="DyingCell.bmp" />
     <Image Include="R1INTMap.bmp" />
     <Image Include="R2INT.ico" />
     <Image Include="small.ico" />

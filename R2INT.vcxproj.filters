@@ -96,18 +96,6 @@
     <Image Include="bitmap1.bmp">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="AliveCell.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="BirthCell.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="DeadCell.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="DyingCell.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="small.ico">
       <Filter>Resource Files</Filter>
     </Image>
