@@ -131,10 +131,15 @@ int main() {
     view.setSize(static_cast<sf::Vector2f>(window.getSize()));
     view.setCenter({ view.getSize().x / 2 , view.getSize().y / 2});
 
+    sf::Vector2u newSize = window.getSize();
+    sf::Vector2f newSizef(static_cast<sf::Vector2f>(newSize));
+
     sf::View uiView;
+    uiView.setSize(newSizef);
+    uiView.setCenter(newSizef * 0.5f);
 
     // Testing buttons
-    Button b;
+    MainGUI mainGui(window.getSize());
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
@@ -176,6 +181,8 @@ int main() {
                     isLeftMouseDown = false;
                     isRightMouseDown = false;
                 }
+
+                mainGui.HandleMouseClick(static_cast<sf::Vector2f>(mousePosition));
             }
             else if (event->is<sf::Event::MouseButtonReleased>()) {
                 if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
@@ -236,6 +243,8 @@ int main() {
                 // Update UI view to match pixel coords (top-left = (0,0), bottom-right = (width, height))
                 uiView.setSize(newSizef);
                 uiView.setCenter(newSizef * 0.5f);
+
+                mainGui.Resize(newSize);
             }
         }
 
@@ -295,7 +304,7 @@ int main() {
         // Draw UI
         window.setView(uiView);
         window.draw(menuText);
-        b.Draw(window);
+        mainGui.Draw(window);
 
         window.display();
 
