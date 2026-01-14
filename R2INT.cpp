@@ -138,12 +138,21 @@ int main() {
     uiView.setSize(newSizef);
     uiView.setCenter(newSizef * 0.5f);
 
-    // Testing buttons
     MainGUI mainGui(window.getSize());
-    mainGui.playButton.SetCallback([&]() {
+    // Lambda for GUI elements
+    auto PlayPause = [&]() {
         isPlaying = !isPlaying;
-        });
-
+        sf::Color playColor = isPlaying ? sf::Color(0, 192, 96) : sf::Color(0, 255, 128);
+        mainGui.playButton.setColor(playColor);
+        };
+    auto Reset = [&]() {
+        currentWorld = originalWorld;
+        generation = 0;
+        isPlaying = false;
+        mainGui.playButton.setColor(sf::Color(0, 255, 128));
+        };
+    mainGui.playButton.SetCallback(PlayPause);
+    mainGui.resetButton.SetCallback(Reset);
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
@@ -202,9 +211,7 @@ int main() {
                 sf::Keyboard::Key keyPress = event->getIf<sf::Event::KeyPressed>()->code;
                 if (keyPress == sf::Keyboard::Key::R)
                 {
-                    currentWorld = originalWorld;
-                    generation = 0;
-                    isPlaying = false;
+                    Reset();
                 }
                 else if (keyPress == sf::Keyboard::Key::Equal)
                 {
@@ -228,7 +235,7 @@ int main() {
                 }
                 else if (keyPress == sf::Keyboard::Key::Enter)
                 {
-                    isPlaying = !isPlaying;
+                    PlayPause();
                 }
                 else if (keyPress == sf::Keyboard::Key::Space)
                 {

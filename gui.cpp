@@ -5,7 +5,7 @@ Button::Button()
 {
     rect.setSize({ 128.f, 128.f });          // default button size
     rect.setPosition({ 20.f, 20.f });
-    rect.setFillColor(sf::Color(0, 255, 192));
+    rect.setFillColor(sf::Color::White);
     rect.setOutlineColor(sf::Color::Black);
     rect.setOutlineThickness(2.f);
 }
@@ -60,13 +60,12 @@ void MainGUI::Resize(sf::Vector2u windowSize)
 
     // Settings button (furthest right)
     settingsButton.setSize(buttonSize);
-    settingsButton.setPosition({ bottomRight.x - buttonSize.x, bottomRight.y - buttonSize.y });
+    settingsButton.setPosition({ bottomRight.x - buttonSize.x, spacing });
 
     // Reset button (left of Settings)
     resetButton.setSize(buttonSize);
     resetButton.setPosition(
-        { settingsButton.getPosition().x - spacing - buttonSize.x,
-        bottomRight.y - buttonSize.y }
+        { bottomRight.x - buttonSize.x, bottomRight.y - buttonSize.y }
     );
 
     // Play button (left of Reset)
