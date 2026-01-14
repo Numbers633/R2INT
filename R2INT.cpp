@@ -112,7 +112,7 @@ int main() {
     ruleEditorColors[2] = sf::Color::Color(0, 255, 240);
     ruleEditorColors[3] = sf::Color::Color(224, 64, 240);
 
-    sf::RenderWindow window(sf::VideoMode({ 640, 640 }), "R2INT");
+    sf::RenderWindow window(sf::VideoMode({ 1024, 768 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
     window.setFramerateLimit(60);
 
@@ -140,6 +140,10 @@ int main() {
 
     // Testing buttons
     MainGUI mainGui(window.getSize());
+    mainGui.playButton.SetCallback([&]() {
+        isPlaying = !isPlaying;
+        });
+
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling

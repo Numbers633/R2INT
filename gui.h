@@ -21,14 +21,14 @@ public:
 
 class MainGUI {
 private:
-    Button playButton;
-    Button resetButton;
-    Button settingsButton;
-
     float spacing;
 public:
     MainGUI(sf::Vector2u windowSize);
     void Draw(sf::RenderTarget& target);
     void Resize(sf::Vector2u windowSize);
     void HandleMouseClick(const sf::Vector2f& mousePos);
+
+    Button playButton;
+    Button resetButton;
+    Button settingsButton;
 };

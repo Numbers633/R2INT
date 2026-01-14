@@ -21,21 +21,20 @@ void Button::CheckClick(const sf::Vector2f& mousePos)
 MainGUI::MainGUI(sf::Vector2u windowSize)
 {
     spacing = 16.f;
-    sf::Vector2f buttonSize(96.f, 96.f);
+    sf::Vector2f buttonSize(64.f, 64.f);
 
     // Bottom-right corner coordinates
     sf::Vector2f bottomRight(windowSize.x - spacing, windowSize.y - spacing);
 
     // Settings button (furthest right)
     settingsButton.setSize(buttonSize);
-    settingsButton.setPosition({ bottomRight.x - buttonSize.x, bottomRight.y - buttonSize.y });
+    settingsButton.setPosition({ bottomRight.x - buttonSize.x, spacing });
     settingsButton.setColor(sf::Color(0, 144, 128)); // temporary color
 
     // Reset button (left of Settings)
     resetButton.setSize(buttonSize);
     resetButton.setPosition(
-        { settingsButton.getPosition().x - spacing - buttonSize.x,
-        bottomRight.y - buttonSize.y }
+        { bottomRight.x - buttonSize.x, bottomRight.y - buttonSize.y }
     );
     resetButton.setColor(sf::Color(96, 224, 64)); // temporary color
 
@@ -54,7 +53,7 @@ MainGUI::MainGUI(sf::Vector2u windowSize)
 
 void MainGUI::Resize(sf::Vector2u windowSize)
 {
-    sf::Vector2f buttonSize(96.f, 96.f);
+    sf::Vector2f buttonSize(64.f, 64.f);
 
     // Bottom-right corner coordinates
     sf::Vector2f bottomRight(windowSize.x - spacing, windowSize.y - spacing);
