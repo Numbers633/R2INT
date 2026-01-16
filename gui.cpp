@@ -63,6 +63,8 @@ MainGUI::MainGUI(sf::Vector2u windowSize)
 
     playTex.loadFromFile("assets\\Play.png");
     pauseTex.loadFromFile("assets\\Pause.png");
+    resetTex.loadFromFile("assets\\Reset.png");
+    settingsTex.loadFromFile("assets\\Menu.png");
 
     // Bottom-right corner coordinates
     sf::Vector2f bottomRight(windowSize.x - spacing, windowSize.y - spacing);
@@ -71,6 +73,7 @@ MainGUI::MainGUI(sf::Vector2u windowSize)
     settingsButton.setSize(buttonSize);
     settingsButton.setPosition({ bottomRight.x - buttonSize.x, spacing });
     settingsButton.setColor(sf::Color(0, 144, 128)); // temporary color
+    settingsButton.SetIcon(settingsTex);
 
     // Reset button (left of Settings)
     resetButton.setSize(buttonSize);
@@ -78,6 +81,7 @@ MainGUI::MainGUI(sf::Vector2u windowSize)
         { bottomRight.x - buttonSize.x, bottomRight.y - buttonSize.y }
     );
     resetButton.setColor(sf::Color(96, 224, 64)); // temporary color
+    resetButton.SetIcon(resetTex);
 
     // Play button (left of Reset)
     playButton.setSize(buttonSize);
