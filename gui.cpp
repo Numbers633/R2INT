@@ -18,8 +18,6 @@ sf::Texture& GetDummyTexture()
 
 Button::Button() : icon(GetDummyTexture())
 {
-    rect.setSize({ 128.f, 128.f });          // default button size
-    rect.setPosition({ 20.f, 20.f });
     rect.setFillColor(sf::Color::White);
     rect.setOutlineColor(sf::Color::Black);
     rect.setOutlineThickness(2.f);
@@ -56,6 +54,31 @@ void Button::UpdateIconTransform()
         );
     }
 }
+void Button::UpdateLabelTransform()
+{
+    if (!label)
+        return;
+
+    sf::FloatRect bounds = label->getLocalBounds();
+    label->setOrigin({
+        bounds.position.x + bounds.size.x / 2.f,
+        bounds.position.y + bounds.size.y / 2.f });
+
+    label->setPosition(
+        rect.getPosition() + rect.getSize() * 0.5f
+    );
+}
+
+void Button::SetLabel(const sf::Font& font,
+    const std::string& text,
+    unsigned int size)
+{
+    label.emplace(font, text, size);
+    label->setFillColor(sf::Color::Black);
+
+    UpdateLabelTransform();
+}
+
 MainGUI::MainGUI(sf::Vector2u windowSize)
 {
     spacing = 16.f;
@@ -134,4 +157,70 @@ void MainGUI::HandleMouseClick(const sf::Vector2f& mousePos)
     playButton.CheckClick(mousePos);
     resetButton.CheckClick(mousePos);
     settingsButton.CheckClick(mousePos);
+}
+
+Menu::Menu(
+    int r,
+    int c,
+    sf::Vector2f size,
+    sf::Vector2f start,
+    sf::Vector2f space,
+    const sf::Font& font,
+    std::vector<std::string> buttonLabels,
+    unsigned int textSize
+)
+    : rows(r), cols(c),
+    buttonSize(size),
+    spacing(space),
+    startPos(start)
+{
+    buttons.resize(rows * cols);
+
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
+            int index = row * cols + col;
+
+            sf::Vector2f pos(
+                startPos.x + col * (buttonSize.x + spacing.x),
+                startPos.y + row * (buttonSize.y + spacing.y)
+            );
+
+            buttons[index].setSize(buttonSize);
+            buttons[index].setPosition(pos);
+            buttons[index].SetLabel(font,
+                (index < (int)buttonLabels.size()) ? buttonLabels[index] : "",
+                textSize
+            );
+        }
+    }
+}
+
+void Menu::setButtons(std::vector<Button>&& newButtons) {
+    buttons = std::move(newButtons);
+
+    for (int i = 0; i < (int)buttons.size(); ++i) {
+        int row = i / cols;
+        int col = i % cols;
+
+        buttons[i].setSize(buttonSize);
+        buttons[i].setPosition({
+            startPos.x + col * (buttonSize.x + spacing.x),
+            startPos.y + row * (buttonSize.y + spacing.y)
+            });
+    }
+}
+
+void Menu::draw(sf::RenderTarget& target, const sf::Vector2f& mousePos, std::function<sf::Color(int, bool)> colorFunc)
+{
+    for (int i = 0; i < (int)buttons.size(); ++i) {
+        bool hovered = buttons[i].getBounds().contains(mousePos);
+        buttons[i].setColor(colorFunc(i, hovered));
+
+        target.draw(buttons[i]);
+    }
+}
+
+void Menu::handleClick(const sf::Vector2f& mousePos) {
+    for (auto& b : buttons)
+        b.CheckClick(mousePos);
 }

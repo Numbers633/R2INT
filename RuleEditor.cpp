@@ -3,13 +3,31 @@
 #include "R2INT_File.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include "gui.h"
 #include <random>
 #include <iostream>
+
+// Grid parameters
+const int rows = 5;
+const int cols = 2;
+const float boxWidth = 544.f;
+const float boxHeight = 96.f;
+const float startX = 72.f;   // top-left x
+const float startY = 72.f;   // top-left y
+const float spacingX = 72.f; // horizontal spacing
+const float spacingY = 24.f; // vertical spacing
 
 RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     : clearText(font, "Clear Rule", 48),
     saveText(font, "Save Rule", 48),
-    settingsSprite(settingsTexture)
+    settingsSprite(settingsTexture),
+    settingsMenu(5,2,
+        { 544.f, 96.f },
+        { 72.f, 72.f },
+        { 72.f, 24.f },
+        font,
+        { "Clear", "Save", "Load", "Set Rule", "Rand Rule", "Mutate", "Set Nbrhood", "Set States", "Set Dimension", "Set Symmetry" }, 80
+    )
 {
     static std::uniform_int_distribution<int> rnd(0, 7);
     for (int i = 0; i < 25; i++)
@@ -34,16 +52,6 @@ RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     settingsSprite.setPosition({ 1295.f, 10.f });
     settingsBounds = settingsSprite.getGlobalBounds();
 }
-
-// Grid parameters
-const int rows = 5;
-const int cols = 2;
-const float boxWidth = 544.f;
-const float boxHeight = 96.f;
-const float startX = 72.f;   // top-left x
-const float startY = 72.f;   // top-left y
-const float spacingX = 72.f; // horizontal spacing
-const float spacingY = 24.f; // vertical spacing
 
 void RuleEditor::RandomizeNeighborhood(std::mt19937& gen) {
     static std::uniform_int_distribution<int> rnd(0, 7);
@@ -179,53 +187,22 @@ void RuleEditor::Draw(sf::RenderWindow* window,
     else if (screen == 1) {
         window->clear(sf::Color(0, 120, 60, 255));
 
-        sf::RectangleShape box(sf::Vector2f(boxWidth, boxHeight));
-        box.setOutlineColor(sf::Color::Black);
-        box.setOutlineThickness(2.f);
-
-        sf::Text label(f, "", 80);
-        label.setFillColor(sf::Color::Black);
-
-        // Texts for specific boxes
-        std::vector<std::string> boxTexts = {
-            "Clear", "Save", "Load", "Set Rule", "Rand Rule", "Mutate", "Set Nbrhood", "Set States", "Set Dimension", "Set Symmetry"
-        };
-
-        // Draw the 2x4 grid
-        for (int row = 0; row < rows; ++row) {
-            for (int col = 0; col < cols; ++col) {
-                int index = row * cols + col;
-
-                // Position the box
-                box.setPosition(
-                    { startX + col * (boxWidth + spacingX),
-                    startY + row * (boxHeight + spacingY) }
-                );
-
-                // Set individual color
-                if (index <= 2) box.setFillColor(sf::Color(100,255,170));      // Implemented actions
-                else box.setFillColor(sf::Color(0, 30, 15));               // Not implemented actions
-
-                // Colors: 40,200,120 for hovering over; 100,255,170 normal; 0,30,15 not implemented
-
-                window->draw(box);
-
-                // Draw label if it exists
-                if (!boxTexts[index].empty()) {
-                    label.setString(boxTexts[index]);
-
-                    // Center label inside box
-                    sf::FloatRect textBounds = label.getLocalBounds();
-                    label.setOrigin(textBounds.getCenter());
-                    label.setPosition(
-                        { startX + col * (boxWidth + spacingX) + boxWidth / 2.f,
-                        startY + row * (boxHeight + spacingY) + boxHeight / 2.f }
-                    );
-
-                    window->draw(label);
+        sf::Vector2f mousePos =
+            static_cast<sf::Vector2f>(sf::Mouse::getPosition(*window));
+        settingsMenu.draw(
+            *window,
+            mousePos,
+            [](int index, bool hovered) -> sf::Color {
+                if (index <= 2) {
+                    return hovered
+                        ? sf::Color(40, 200, 120)
+                        : sf::Color(100, 255, 170);
+                }
+                else {
+                    return sf::Color(0, 30, 15);
                 }
             }
-        }
+        );
     }
 
     window->draw(settingsSprite);

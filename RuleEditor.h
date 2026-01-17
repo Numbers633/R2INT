@@ -6,6 +6,7 @@
 #include <array>
 #include <random>
 #include "OffsetStruct.h"  // For Neighborhood type and methods
+#include "gui.h"
 
 class RuleEditor {
 public:
@@ -35,6 +36,8 @@ private:
     sf::FloatRect settingsBounds;
 
     sf::Font f;
+
+    Menu settingsMenu;
 
     short int screen = 0; // 0 = main editor, 1 = settings
 };
