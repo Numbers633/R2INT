@@ -123,10 +123,6 @@ int main() {
     bool isRightMouseDown = false;
     bool isLeftMouseDown = false;
 
-    sf::Text menuText(font, "Open Rule Editor", 24);
-    menuText.setPosition({ 10, 10 });
-    menuText.setFillColor(sf::Color::White);
-
     sf::View view;
     view.setSize(static_cast<sf::Vector2f>(window.getSize()));
     view.setCenter({ view.getSize().x / 2 , view.getSize().y / 2});
@@ -139,6 +135,17 @@ int main() {
     uiView.setCenter(newSizef * 0.5f);
 
     MainGUI mainGui(window.getSize());
+    Menu settingsMenu(1, 1,
+        { 544.f, 96.f },
+        { 72.f, 72.f },
+        { 72.f, 24.f },
+        font,
+        { "Rule Editor" }, 80
+    );
+
+
+
+    bool settingsMenuOpen = false;
     // Lambda for GUI elements
     auto PlayPause = [&]() {
         isPlaying = !isPlaying;
@@ -154,8 +161,20 @@ int main() {
         mainGui.playButton.setColor(sf::Color(0, 255, 128));
         mainGui.playButton.SetIcon(mainGui.playTex);
         };
+    auto ToggleSettingsMenu = [&]() {
+        settingsMenuOpen = !settingsMenuOpen;
+        };
+    auto OpenRuleEditor = [&]() {
+        if (!secondWindow) {
+            secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1440, 720 }), "R2INT - Rule Editor");
+        }
+        isLeftMouseDown = false;
+        isRightMouseDown = false;
+        };
     mainGui.playButton.SetCallback(PlayPause);
     mainGui.resetButton.SetCallback(Reset);
+    mainGui.settingsButton.SetCallback(ToggleSettingsMenu);
+    settingsMenu.SetButtonCallback(0, OpenRuleEditor);
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
@@ -190,15 +209,11 @@ int main() {
                     previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 }
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-                if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
-                    if (!secondWindow) {
-                        secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1440, 720 }), "R2INT - Rule Editor");
-                    }
-                    isLeftMouseDown = false;
-                    isRightMouseDown = false;
-                }
 
                 mainGui.HandleMouseClick(static_cast<sf::Vector2f>(mousePosition));
+                if (settingsMenuOpen) {
+                    settingsMenu.handleClick(static_cast<sf::Vector2f>(mousePosition));
+                }
             }
             else if (event->is<sf::Event::MouseButtonReleased>()) {
                 if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
@@ -259,6 +274,7 @@ int main() {
                 uiView.setCenter(newSizef * 0.5f);
 
                 mainGui.Resize(newSize);
+                settingsMenu.centerIn(newSize);
             }
         }
 
@@ -317,7 +333,12 @@ int main() {
 
         // Draw UI
         window.setView(uiView);
-        window.draw(menuText);
+        if (settingsMenuOpen) {
+            settingsMenu.draw(window, static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)),
+                [](int index, bool hovered) {
+                    return hovered ? sf::Color(128, 255, 192) : sf::Color(128, 160, 144);
+                });
+        }
         mainGui.Draw(window);
 
         window.display();

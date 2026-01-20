@@ -26,15 +26,16 @@ public:
     }
     void CheckClick(const sf::Vector2f& mousePos);
 
+    sf::FloatRect getBounds() const { return rect.getGlobalBounds(); }
+    sf::Vector2f getPosition() const { return rect.getPosition(); }
+
     void setSize(sf::Vector2f buttonSize) { rect.setSize(buttonSize); UpdateIconTransform(); UpdateLabelTransform(); }
     void setPosition(sf::Vector2f position) { rect.setPosition(position); UpdateIconTransform(); UpdateLabelTransform(); }
     void setColor(sf::Color color) { rect.setFillColor(color); }
     void SetCallback(std::function<void()> func) { callback = func; }
     void SetIcon(const sf::Texture& tex);
     void SetLabel(const sf::Font& font, const std::string& text, unsigned int size);
-    sf::FloatRect getBounds() const { return rect.getGlobalBounds(); }
-
-    sf::Vector2f getPosition() const { return rect.getPosition(); }
+    
 };
 
 class MainGUI {
@@ -71,6 +72,9 @@ public:
 
     void setButtons(std::vector<Button>&& newButtons);
     void SetButtonCallback(std::size_t index, std::function<void()> cb);
+    void setPosition(sf::Vector2f pos);
+    void centerIn(sf::Vector2u windowSize);
+    sf::Vector2f getSize() const;
 
     void draw(sf::RenderTarget& target, const sf::Vector2f& mousePos, std::function<sf::Color(int, bool)> colorFunc);
 

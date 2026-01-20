@@ -195,6 +195,39 @@ Menu::Menu(
     }
 }
 
+sf::Vector2f Menu::getSize() const {
+    return {
+        cols * buttonSize.x + (cols - 1) * spacing.x,
+        rows * buttonSize.y + (rows - 1) * spacing.y
+    };
+}
+
+void Menu::setPosition(sf::Vector2f pos) {
+    startPos = pos;
+
+    for (int i = 0; i < (int)buttons.size(); ++i) {
+        int row = i / cols;
+        int col = i % cols;
+
+        buttons[i].setPosition({
+            startPos.x + col * (buttonSize.x + spacing.x),
+            startPos.y + row * (buttonSize.y + spacing.y)
+            });
+    }
+}   
+
+void Menu::centerIn(sf::Vector2u windowSize) {
+    sf::Vector2f size = getSize();
+
+    sf::Vector2f pos(
+        (windowSize.x - size.x) * 0.5f,
+        (windowSize.y - size.y) * 0.5f
+    );
+
+    setPosition(pos);
+}
+
+
 void Menu::setButtons(std::vector<Button>&& newButtons) {
     buttons = std::move(newButtons);
 
