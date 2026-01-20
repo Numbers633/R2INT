@@ -34,7 +34,7 @@ public:
     void SetLabel(const sf::Font& font, const std::string& text, unsigned int size);
     sf::FloatRect getBounds() const { return rect.getGlobalBounds(); }
 
-    sf::Vector2f getPosition() { return rect.getPosition(); }
+    sf::Vector2f getPosition() const { return rect.getPosition(); }
 };
 
 class MainGUI {
@@ -70,6 +70,7 @@ public:
     );
 
     void setButtons(std::vector<Button>&& newButtons);
+    void SetButtonCallback(std::size_t index, std::function<void()> cb);
 
     void draw(sf::RenderTarget& target, const sf::Vector2f& mousePos, std::function<sf::Color(int, bool)> colorFunc);
 

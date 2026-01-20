@@ -71,7 +71,7 @@ int main() {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> rnd(0, 7);
 
-    RuleEditor ruleEditor(gen, font);
+    RuleEditor ruleEditor(gen, font, globalRule);
 
     //
     // Playback variables

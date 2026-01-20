@@ -10,7 +10,7 @@
 
 class RuleEditor {
 public:
-    RuleEditor(std::mt19937& gen, const sf::Font& font);
+    RuleEditor(std::mt19937& gen, const sf::Font& font, R2INTRules& globalRule);
 
     short int GetScreen() const { return screen; };
     void SetScreen(short int s) { screen = s; };

@@ -224,3 +224,11 @@ void Menu::handleClick(const sf::Vector2f& mousePos) {
     for (auto& b : buttons)
         b.CheckClick(mousePos);
 }
+
+void Menu::SetButtonCallback(std::size_t index, std::function<void()> cb)
+{
+    if (index >= buttons.size())
+        return; // or assert
+
+    buttons[index].SetCallback(std::move(cb));
+}

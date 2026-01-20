@@ -17,7 +17,7 @@ const float startY = 72.f;   // top-left y
 const float spacingX = 72.f; // horizontal spacing
 const float spacingY = 24.f; // vertical spacing
 
-RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
+RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font, R2INTRules& globalRule)
     : clearText(font, "Clear Rule", 48),
     saveText(font, "Save Rule", 48),
     settingsSprite(settingsTexture),
@@ -51,6 +51,19 @@ RuleEditor::RuleEditor(std::mt19937& gen, const sf::Font& font)
     settingsSprite.setTextureRect(textureRect);
     settingsSprite.setPosition({ 1295.f, 10.f });
     settingsBounds = settingsSprite.getGlobalBounds();
+
+    settingsMenu.SetButtonCallback(0, [this, &globalRule]() {
+        globalRule.ClearRule();
+        screen = 0;
+        });
+    settingsMenu.SetButtonCallback(1, [this, &globalRule]() {
+        SaveTor2intFile(globalRule);
+        screen = 0;
+        });
+    settingsMenu.SetButtonCallback(2, [this, &globalRule]() {
+        LoadFromr2intFile(globalRule);
+        screen = 0;
+        });
 }
 
 void RuleEditor::RandomizeNeighborhood(std::mt19937& gen) {
@@ -76,37 +89,8 @@ void RuleEditor::HandleEvent(const sf::Event& event,
             if (screen == 0) screen = 1;
             else screen = 0;
         }
-        else if (screen == 1) { // In settings screen, any click returns to main editor
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    int index = r * cols + c;
-
-                    float boxX = startX + c * (boxWidth + spacingX);
-                    float boxY = startY + r * (boxHeight + spacingY);
-
-                    sf::FloatRect bounds({ boxX, boxY }, { boxWidth, boxHeight });
-
-                    if (bounds.contains(mouseCoords)) {
-                        std::cout << "Clicked box: " << index << std::endl;
-
-                        // Handle specific actions
-                        if (index == 0) { // Clear
-                            globalRule.ClearRule();
-                            screen = 0;
-                        }
-                        else if (index == 1) { // Save
-                            SaveTor2intFile(globalRule);
-                            screen = 0;
-                        }
-                        else if (index == 2) { // Load
-                            LoadFromr2intFile(globalRule);
-                            screen = 0;
-                        }
-
-                        // You can add more actions for other boxes here
-                    }
-                }
-            }
+        else if (screen == 1) {
+            settingsMenu.handleClick(mouseCoords);
         }
         else if (screen == 0)
         {
