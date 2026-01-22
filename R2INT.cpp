@@ -142,7 +142,7 @@ int main() {
         font,
         { "Rule Editor" }, 80
     );
-
+    settingsMenu.centerIn(newSize);
 
 
     bool settingsMenuOpen = false;

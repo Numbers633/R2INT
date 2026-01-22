@@ -6,7 +6,7 @@
 #include <array>
 #include <random>
 #include "OffsetStruct.h"  // For Neighborhood type and methods
-#include "gui.h"
+#include "Menu.hpp"
 
 class RuleEditor {
 public:
