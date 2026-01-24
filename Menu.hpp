@@ -45,6 +45,7 @@ public:
     void Draw(sf::RenderTarget&, sf::Vector2f mousePos);
     void HandleClick(sf::Vector2f mousePos);
     void SetColorFunction(std::function<sf::Color(int, bool)> func) { colorFunc = std::move(func); }
+    void centerMenus(sf::Vector2u windowSize);
 
 private:
     std::unordered_map<std::string, Menu> menus;

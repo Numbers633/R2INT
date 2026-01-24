@@ -160,3 +160,9 @@ void MenuManager::Back() {
     if (!stack.empty())
         stack.pop_back();
 }
+
+void MenuManager::centerMenus(sf::Vector2u windowSize) {
+    for (auto& [name, menu] : menus) {
+        menu.centerIn(windowSize);
+    }
+}

@@ -15,7 +15,7 @@ R2INTRules globalRule;
 
 void InitializeRule()
 {
-    std::cout << "Loading. . ." << std::endl;
+    std::cout << "Initializing rule..." << std::endl;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -49,12 +49,12 @@ void InitializeRule()
             std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
         }
     }
+
+    std::cout << "Initializing rule complete." << std::endl;
 }
 
 int main() {
-    std::cout << "Initializing rule..." << std::endl;
     InitializeRule();
-    std::cout << "Initializing rule complete." << std::endl;
     std::cout << "Initializing grid..." << std::endl;
     World currentWorld;
     World originalWorld = currentWorld;
@@ -92,7 +92,7 @@ int main() {
     // Edit variables
     int drawingState = 0;
 
-    // Colors for multistate rules
+    // Colors for multistate rules (obtined by an algorithm I made; is it possible to make that run faster than O(n)?)
     std::vector<sf::Color> colors(11);
     colors[0] = sf::Color::Black;
     colors[1] = sf::Color::White;
@@ -106,6 +106,8 @@ int main() {
     colors[9] = sf::Color(255, 127, 255, 255);
     colors[10] = sf::Color(255, 255, 127, 255);
 
+    // RuleEditor colors is obtained by performing simple mat to the standard colors
+    // R: 0.875r, G = 0.875g, B = 0.6875b + 32
     std::vector<sf::Color> ruleEditorColors(4);
     ruleEditorColors[0] = sf::Color::Color(0, 64, 32);
     ruleEditorColors[1] = sf::Color::Color(224, 255, 240);
@@ -140,13 +142,7 @@ int main() {
     menuManager.SetColorFunction([](int index, bool hovered) {
         return hovered ? sf::Color(128, 255, 192) : sf::Color(128, 160, 144);
         });
-    Menu settingsMenu(1, 1,
-        { 544.f, 96.f },
-        { 72.f, 72.f },
-        { 72.f, 24.f },
-        font,
-        { "Rule Editor" }, 80
-    );
+    Menu settingsMenu(1, 1, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font, { "Rule Editor" }, 64 );
     settingsMenu.centerIn(newSize);
 
     // Make the callbacks for the main GUI buttons
@@ -194,8 +190,8 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
-                window.setView(uiView);
-
+                // Handle CA interaction
+                window.setView(view);
                 if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right)
                 {
                     isRightMouseDown = true;
@@ -217,6 +213,9 @@ int main() {
                     isLeftMouseDown = true;
                     previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 }
+                // Handle GUI clicks
+                window.setView(uiView);
+
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
                 mainGui.HandleMouseClick(static_cast<sf::Vector2f>(mousePosition));
@@ -281,7 +280,7 @@ int main() {
                 uiView.setCenter(newSizef * 0.5f);
 
                 mainGui.Resize(newSize);
-                settingsMenu.centerIn(newSize);
+                menuManager.centerMenus(newSize);
             }
         }
 
