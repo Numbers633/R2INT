@@ -21,6 +21,10 @@ Button::Button() : icon(GetDummyTexture())
     rect.setFillColor(sf::Color::White);
     rect.setOutlineColor(sf::Color::Black);
     rect.setOutlineThickness(2.f);
+
+    SetCallback([]() {
+        std::cout << "ERROR: Button callback not set!\n";
+        });
 }
 
 void Button::CheckClick(const sf::Vector2f& mousePos)

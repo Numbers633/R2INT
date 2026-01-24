@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Menu.hpp"
 
 Menu::Menu(
@@ -97,12 +98,65 @@ void Menu::draw(sf::RenderTarget& target, const sf::Vector2f& mousePos, std::fun
 void Menu::handleClick(const sf::Vector2f& mousePos) {
     for (auto& b : buttons)
         b.CheckClick(mousePos);
+
 }
 
 void Menu::SetButtonCallback(std::size_t index, std::function<void()> cb)
 {
     if (index >= buttons.size())
+    {
+        std::cout << "Menu::SetButtonCallback: Index out of range\n";
+        std::cout << "Index: " << index << ", number of buttons: " << buttons.size() << "\n";
         return; // or assert
+    }
 
     buttons[index].SetCallback(std::move(cb));
+}
+
+// MenuuManager methods
+MenuManager::MenuManager()
+{
+    colorFunc = [](int, bool hovered) {
+        return hovered ? sf::Color(192, 192, 192) : sf::Color(160, 160, 160);
+        };
+}
+
+void MenuManager::AddMenu(const std::string& name, Menu&& menu) {
+    menus.emplace(name, std::move(menu));
+}
+
+void MenuManager::Draw(sf::RenderTarget& target, sf::Vector2f mousePos) {
+    if (!stack.empty())
+        stack.back()->draw(target, mousePos, colorFunc);
+}
+
+void MenuManager::HandleClick(sf::Vector2f mousePos) {
+    if (!stack.empty())
+        stack.back()->handleClick(mousePos);
+}
+
+void MenuManager::Open(const std::string& name) {
+    auto it = menus.find(name);
+    if (it != menus.end()) {
+        stack.push_back(&it->second);
+    }
+}
+
+void MenuManager::Close() {
+    stack.clear();
+}
+
+void MenuManager::Toggle(std::string root) {
+    if (stack.empty()) {
+        Open(root);
+    }
+    else {
+        // Close the top menu
+        stack.pop_back();
+    }
+}
+
+void MenuManager::Back() {
+    if (!stack.empty())
+        stack.pop_back();
 }

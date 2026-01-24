@@ -130,11 +130,16 @@ int main() {
     sf::Vector2u newSize = window.getSize();
     sf::Vector2f newSizef(static_cast<sf::Vector2f>(newSize));
 
+    // GUI setup
     sf::View uiView;
     uiView.setSize(newSizef);
     uiView.setCenter(newSizef * 0.5f);
 
     MainGUI mainGui(window.getSize());
+    MenuManager menuManager;
+    menuManager.SetColorFunction([](int index, bool hovered) {
+        return hovered ? sf::Color(128, 255, 192) : sf::Color(128, 160, 144);
+        });
     Menu settingsMenu(1, 1,
         { 544.f, 96.f },
         { 72.f, 72.f },
@@ -144,9 +149,9 @@ int main() {
     );
     settingsMenu.centerIn(newSize);
 
-
+    // Make the callbacks for the main GUI buttons
     bool settingsMenuOpen = false;
-    // Lambda for GUI elements
+
     auto PlayPause = [&]() {
         isPlaying = !isPlaying;
         sf::Color playColor = isPlaying ? sf::Color(0, 192, 96) : sf::Color(0, 255, 128);
@@ -162,7 +167,7 @@ int main() {
         mainGui.playButton.SetIcon(mainGui.playTex);
         };
     auto ToggleSettingsMenu = [&]() {
-        settingsMenuOpen = !settingsMenuOpen;
+        menuManager.Toggle("Settings");
         };
     auto OpenRuleEditor = [&]() {
         if (!secondWindow) {
@@ -176,6 +181,9 @@ int main() {
     mainGui.settingsButton.SetCallback(ToggleSettingsMenu);
     settingsMenu.SetButtonCallback(0, OpenRuleEditor);
 
+    // Finally, add the menus to the manager
+    menuManager.AddMenu("Settings", std::move(settingsMenu));
+
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
             if (event->is<sf::Event::Closed>()) {
@@ -186,6 +194,8 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
+                window.setView(uiView);
+
                 if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right)
                 {
                     isRightMouseDown = true;
@@ -204,16 +214,13 @@ int main() {
                 }
                 else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
                 {
-                    window.setView(view);
                     isLeftMouseDown = true;
                     previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 }
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
 
                 mainGui.HandleMouseClick(static_cast<sf::Vector2f>(mousePosition));
-                if (settingsMenuOpen) {
-                    settingsMenu.handleClick(static_cast<sf::Vector2f>(mousePosition));
-                }
+                menuManager.HandleClick(static_cast<sf::Vector2f>(mousePosition));
             }
             else if (event->is<sf::Event::MouseButtonReleased>()) {
                 if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
@@ -333,6 +340,7 @@ int main() {
 
         // Draw UI
         window.setView(uiView);
+        menuManager.Draw(window, static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
         if (settingsMenuOpen) {
             settingsMenu.draw(window, static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)),
                 [](int index, bool hovered) {

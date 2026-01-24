@@ -33,3 +33,22 @@ private:
 
     std::vector<Button> buttons;
 };
+
+class MenuManager {
+public:
+    MenuManager();
+    void AddMenu(const std::string& name, Menu&& menu);
+    void Open(const std::string& name);
+    void Close();          // closes everything
+    void Toggle(std::string root);
+    void Back();           // go back one level
+    void Draw(sf::RenderTarget&, sf::Vector2f mousePos);
+    void HandleClick(sf::Vector2f mousePos);
+    void SetColorFunction(std::function<sf::Color(int, bool)> func) { colorFunc = std::move(func); }
+
+private:
+    std::unordered_map<std::string, Menu> menus;
+    std::vector<Menu*> stack;   // navigation stack
+    std::function<sf::Color(int, bool)> colorFunc;
+};
+
