@@ -143,6 +143,8 @@ void World::Simulate(const R2INTRules& Rules) {
     // Save DeleteEmptyGrids for last to prevent issues during simulation
     DeleteEmptyGrids(contents, VoidState);
 
+    Generation++;
+
     //std::cout << "[DEBUG] Number of grids after simulation: " << contents.size() << std::endl;
 }
 
@@ -194,7 +196,7 @@ void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap, __int8 Voi
 }
 
 // Draw
-void World::Draw(sf::RenderWindow& window, float cellSize, const std::vector<sf::Color>& colors)
+void World::Draw(sf::RenderWindow& window, const std::vector<sf::Color>& colors)
 {
     size_t totalGrids = contents.size();
     sf::VertexArray vertexArray(sf::PrimitiveType::Triangles, totalGrids * GRID_DIMENSIONS * GRID_DIMENSIONS * 6);
@@ -346,4 +348,12 @@ void World::PrintRLE() const
 
     rle += '!';
     std::cout << rle << std::endl;
+}
+
+sf::Vector2i World::GetWorldCoords(const sf::Vector2f& screenPos) const
+{
+    int i = static_cast<int>(std::floor(screenPos.x / cellSize));
+    int j = static_cast<int>(std::floor(screenPos.y / cellSize));
+
+    return { i, j };
 }

@@ -4,7 +4,11 @@
 
 struct World {
     std::unordered_map<GridCoord, Chunk> contents;
-
+    int Generation = 0;
+    int n_states = 2;
+    float cellSize = 40.f;
+    __int8 VoidState = 0; // Default state for empty space; will be replaced with VoidAgar later
+    
     World();
 
     void Simulate(const R2INTRules& Rules);
@@ -17,9 +21,9 @@ struct World {
 
     void EnsureAllPotentialNeighborGridsExist();
 
-    __int8 VoidState = 0; // Default state for empty space
+    void Draw(sf::RenderWindow& window, const std::vector<sf::Color>& colors);
 
-    void Draw(sf::RenderWindow& window, float cellSize, const std::vector<sf::Color>& colors);
+    sf::Vector2i GetWorldCoords(const sf::Vector2f& screenPos) const;
 
     // GetRect function; returns global coordinates
     sf::IntRect GetRect() const;

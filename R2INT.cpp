@@ -77,34 +77,23 @@ int main() {
     // Playback variables
     //
     bool isPlaying = false;
-    
+
+    // Timer variables
     float timeStep = 1.0f / 60.0f;  // 60 updates per second
     float accumulator = 0.0f;
-
     sf::Clock clock;
     int frameCount = 0;
-    int generation = 0;
     float elapsedTime = 0.0f;
-
-    float cellSize = 40.f;
-    int n_states = 2;
 
     // Edit variables
     int drawingState = 0;
 
     // Colors for multistate rules (obtined by an algorithm I made; is it possible to make that run faster than O(n)?)
-    std::vector<sf::Color> colors(11);
+    std::vector<sf::Color> colors(4);
     colors[0] = sf::Color::Black;
     colors[1] = sf::Color::White;
     colors[2] = sf::Color::Cyan;
     colors[3] = sf::Color::Magenta;
-    colors[4] = sf::Color::Yellow;
-    colors[5] = sf::Color::Blue;
-    colors[6] = sf::Color::Green;
-    colors[7] = sf::Color::Red;
-    colors[8] = sf::Color(127, 255, 255, 255);
-    colors[9] = sf::Color(255, 127, 255, 255);
-    colors[10] = sf::Color(255, 255, 127, 255);
 
     // RuleEditor colors is obtained by performing simple mat to the standard colors
     // R: 0.875r, G = 0.875g, B = 0.6875b + 32
@@ -157,7 +146,6 @@ int main() {
         };
     auto Reset = [&]() {
         currentWorld = originalWorld;
-        generation = 0;
         isPlaying = false;
         mainGui.playButton.setColor(sf::Color(0, 255, 128));
         mainGui.playButton.SetIcon(mainGui.playTex);
@@ -199,14 +187,8 @@ int main() {
                     sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
                     sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
 
-                    float x = mouseWorldPos.x;
-                    float y = mouseWorldPos.y;
-
-                    // Global cell coordinates
-                    int i = static_cast<int>(std::floor(x / cellSize));
-                    int j = static_cast<int>(std::floor(y / cellSize));
-
-                    drawingState = (currentWorld.GetCellStateAt({ i, j }) + 1) % n_states;
+                    sf::Vector2i pos = currentWorld.GetWorldCoords(mouseWorldPos);
+                    drawingState = (currentWorld.GetCellStateAt(pos) + 1) % currentWorld.n_states;
                 }
                 else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
                 {
@@ -290,7 +272,6 @@ int main() {
 
         // Process the grid update at a fixed timestep
         while (accumulator >= timeStep) {
-            generation++;
             currentWorld.Simulate(globalRule);
             //currentWorld.PrintRLE();
             
@@ -314,16 +295,13 @@ int main() {
         if (isRightMouseDown) {
             sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
             sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
-            float x = mouseWorldPos.x;
-            float y = mouseWorldPos.y;
 
-            int i = (x >= 0.f) ? static_cast<int>(x / cellSize) : static_cast<int>((x - cellSize + 1.f) / cellSize);
-            int j = (y >= 0.f) ? static_cast<int>(y / cellSize) : static_cast<int>((y - cellSize + 1.f) / cellSize);
+            sf::Vector2i pos = currentWorld.GetWorldCoords(mouseWorldPos);
 
-            if (generation == 0)
-                originalWorld.PaintAtCell({ i, j }, drawingState);
+            if (currentWorld.Generation == 0)
+                originalWorld.PaintAtCell(pos, drawingState);
 
-            currentWorld.PaintAtCell({ i, j }, drawingState);
+            currentWorld.PaintAtCell(pos, drawingState);
         }
         if (isLeftMouseDown) {
             window.setView(view);  // Use current view for mapping
@@ -335,7 +313,7 @@ int main() {
             previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));  // <== Update after view.move
         }
         std::vector<sf::Color> colorVec(std::begin(colors), std::end(colors));
-        currentWorld.Draw(window, cellSize, colorVec);
+        currentWorld.Draw(window, colorVec);
 
         // Draw UI
         window.setView(uiView);
