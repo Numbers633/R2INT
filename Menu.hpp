@@ -47,6 +47,10 @@ public:
     void SetColorFunction(std::function<sf::Color(int, bool)> func) { colorFunc = std::move(func); }
     void centerMenus(sf::Vector2u windowSize);
 
+    Menu GetMenu(const std::string& name) {
+        return menus.at(name);
+    }
+
 private:
     std::unordered_map<std::string, Menu> menus;
     std::vector<Menu*> stack;   // navigation stack

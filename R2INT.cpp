@@ -131,8 +131,11 @@ int main() {
     menuManager.SetColorFunction([](int index, bool hovered) {
         return hovered ? sf::Color(128, 255, 192) : sf::Color(128, 160, 144);
         });
-    Menu settingsMenu(1, 1, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font, { "Rule Editor" }, 64 );
+    Menu settingsMenu(1, 2, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font, { "Pattern", "Rule Editor" }, 64 );
     settingsMenu.centerIn(newSize);
+    Menu patternMenu(1, 1, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font,
+        { "Clear" }, 64);
+    patternMenu.centerIn(newSize);
 
     // Make the callbacks for the main GUI buttons
     bool settingsMenuOpen = false;
@@ -159,14 +162,29 @@ int main() {
         }
         isLeftMouseDown = false;
         isRightMouseDown = false;
+        menuManager.Close();
+        };
+    auto OpenPatternsMenu = [&]() {
+        menuManager.Open("Patterns");
+        };
+    auto ClearPattern = [&]() {
+        currentWorld = World();
+        originalWorld = currentWorld;
+        isPlaying = false;
+        mainGui.playButton.setColor(sf::Color(0, 255, 128));
+        mainGui.playButton.SetIcon(mainGui.playTex);
+        menuManager.Close();
         };
     mainGui.playButton.SetCallback(PlayPause);
     mainGui.resetButton.SetCallback(Reset);
     mainGui.settingsButton.SetCallback(ToggleSettingsMenu);
-    settingsMenu.SetButtonCallback(0, OpenRuleEditor);
+    settingsMenu.SetButtonCallback(0, OpenPatternsMenu);
+    settingsMenu.SetButtonCallback(1, OpenRuleEditor);
+    patternMenu.SetButtonCallback(0, ClearPattern);
 
     // Finally, add the menus to the manager
     menuManager.AddMenu("Settings", std::move(settingsMenu));
+    menuManager.AddMenu("Patterns", std::move(patternMenu));
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
