@@ -133,8 +133,9 @@ int main() {
         });
     Menu settingsMenu(1, 2, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font, { "Pattern", "Rule Editor" }, 64 );
     settingsMenu.centerIn(newSize);
-    Menu patternMenu(1, 2, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font,
-        { "Clear", "Randomize" }, 64);
+    Menu patternMenu(2, 2, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font,
+        { "Clear", "Randomize" , "Save Pattern", "???" }, 64);
+
     patternMenu.centerIn(newSize);
 
     // Make the callbacks for the main GUI buttons
@@ -181,6 +182,9 @@ int main() {
         mainGui.playButton.SetIcon(mainGui.playTex);
         menuManager.Close();
         };
+    auto SavePattern = [&]() {
+        currentWorld.PrintRLE();
+        };
     mainGui.playButton.SetCallback(PlayPause);
     mainGui.resetButton.SetCallback(Reset);
     mainGui.settingsButton.SetCallback(ToggleSettingsMenu);
@@ -188,6 +192,7 @@ int main() {
     settingsMenu.SetButtonCallback(1, OpenRuleEditor);
     patternMenu.SetButtonCallback(0, ClearPattern);
     patternMenu.SetButtonCallback(1, Randomize);
+    patternMenu.SetButtonCallback(2, SavePattern);
 
     // Finally, add the menus to the manager
     menuManager.AddMenu("Settings", std::move(settingsMenu));
