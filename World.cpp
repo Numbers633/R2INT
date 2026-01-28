@@ -3,7 +3,7 @@
 
 //#define DEBUG_BG
 
-World::World() {
+World::World() : rng(std::random_device{}()) {
     Chunk initial;
     initial.CoordinateX = 0;
     initial.CoordinateY = 0;
@@ -350,6 +350,34 @@ void World::PrintRLE() const
     std::cout << rle << std::endl;
 }
 
+void World::TestRandomize()
+{
+    // 1) Clear all existing chunks
+    contents.clear();
+
+    // 2) Create a single chunk at origin
+    GridCoord origin{ 0, 0 };
+
+    auto [it, inserted] = contents.emplace(
+        origin,
+        Chunk(origin.x, origin.y)
+    );
+
+    Chunk& chunk = it->second;
+
+    // 3) Randomize the entire chunk
+    sf::Rect<int> fullChunk(
+        { 0, 0 },
+        { GRID_DIMENSIONS, GRID_DIMENSIONS }
+    );
+
+    chunk.RandomizeRect(
+        fullChunk,
+        true,                 // Delete outside (does nothing here but consistent)
+        rng);
+
+    Generation = 0;
+}
 sf::Vector2i World::GetWorldCoords(const sf::Vector2f& screenPos) const
 {
     int i = static_cast<int>(std::floor(screenPos.x / cellSize));

@@ -80,7 +80,9 @@ void Chunk::Clear()
     }
 }
 
-void Chunk::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution) {
+void Chunk::RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen) {
+    static std::uniform_int_distribution<int> number_distribution(0, 100);
+
     for (int x = 0; x < GRID_DIMENSIONS; x++) {
         for (int y = 0; y < GRID_DIMENSIONS; y++) {
             sf::Vector2i cellPoint(x, y);  // Equivalent to POINT {x, y}

@@ -15,6 +15,8 @@ struct World {
     void PaintAtCell(sf::Vector2i p, int newState);
     void LinkAllNeighbors();
 
+    void TestRandomize();
+
     Chunk* GetNeighborGrid(int x, int y);
     __int8 GetCellStateAt(sf::Vector2i p) const; // Uses Grid
     __int8 GetCellStateAtOld(sf::Vector2i p) const; // Uses OldGrid
@@ -28,6 +30,8 @@ struct World {
     // GetRect function; returns global coordinates
     sf::IntRect GetRect() const;
     void PrintRLE() const;
+
+    std::mt19937 rng;
 };
 
 void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap, __int8 VoidState);

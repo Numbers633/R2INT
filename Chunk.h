@@ -44,7 +44,7 @@ struct Chunk {
 
 	void Clear();
     void FillWithVoidState(char voidState);
-	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution);
+	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen);
 
 	void Simulate(const R2INTRules& Rules, World& world);
 	void ResetOld();
