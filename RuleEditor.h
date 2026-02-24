@@ -1,0 +1,43 @@
+// RuleEditor.h
+#pragma once
+
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <array>
+#include <random>
+#include "OffsetStruct.h"  // For Neighborhood type and methods
+#include "Menu.hpp"
+
+class RuleEditor {
+public:
+    RuleEditor(std::mt19937& gen, const sf::Font& font, R2INTRules& globalRule);
+
+    short int GetScreen() const { return screen; };
+    void SetScreen(short int s) { screen = s; };
+
+    void RandomizeNeighborhood(std::mt19937& gen);
+    void HandleEvent(const sf::Event& event,
+        R2INTRules& globalRule,
+        std::mt19937& gen,
+        sf::RenderWindow& window);
+
+    void Draw(sf::RenderWindow* window,
+        const std::vector<sf::Color>& colors,
+        const std::vector<sf::Color>& ruleEditorColors,
+        const R2INTRules& globalRule);
+private:
+    Neighborhood editorNeighborhood{};
+    sf::Text clearText;
+    sf::Text saveText;
+
+    // Settings button
+    sf::Texture settingsTexture;
+    sf::Sprite settingsSprite;
+    sf::FloatRect settingsBounds;
+
+    sf::Font f;
+
+    Menu settingsMenu;
+
+    short int screen = 0; // 0 = main editor, 1 = settings
+};

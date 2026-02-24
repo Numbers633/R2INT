@@ -43,33 +43,20 @@ struct Chunk {
 	__int8 GetCellStateAt(sf::Vector2i localXY) const;
 
 	void Clear();
-	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen, std::uniform_int_distribution<int>& number_distribution);
+    void FillWithVoidState(char voidState);
+	void RandomizeRect(sf::Rect<int> RandomizedSection, bool Delete, std::mt19937& gen);
 
 	void Simulate(const R2INTRules& Rules, World& world);
 	void ResetOld();
 
     void EnsureNeighborsExist(World& world) const;
 	
-	bool NeedsNeighbors() const;
+	bool NeedsNeighbors(__int8 voidState) const;
+
+    // GetRect member functions; returns local coordinates
+    int getTop() const;
+    int getBottom() const;
+    int getLeft() const;
+    int getRight() const;
+    sf::IntRect GetRect() const;
 };
-
-struct World {
-	std::unordered_map<GridCoord, Chunk> contents;
-
-	World();
-
-	void Simulate(const R2INTRules& Rules);
-	void PaintAtCell(sf::Vector2i p, int newState);
-	void LinkAllNeighbors();
-
-	Chunk* GetNeighborGrid(int x, int y);
-	__int8 GetCellStateAt(sf::Vector2i p); // Uses Grid
-    __int8 GetCellStateAtOld(sf::Vector2i p); // Uses OldGrid
-
-    void EnsureAllPotentialNeighborGridsExist();
-
-    __int8 VoidState = 0; // Default state for empty space
-};
-
-void DeleteEmptyGrids(std::unordered_map<GridCoord, Chunk>& worldMap);
-void EnsureNeighborsExist(World& world, Chunk& grid);

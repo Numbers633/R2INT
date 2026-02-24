@@ -4,6 +4,12 @@
 #include <cstdint>
 #include <vector>
 
+#ifdef _DEBUG
+#define PERCENT_INCREMENT 2097152
+#else
+#define PERCENT_INCREMENT 8388608
+#endif
+
 struct OffsetInfo {
 	int CellXOffset;
 	int CellYOffset;
@@ -35,6 +41,11 @@ struct Neighborhood {
 
 	int8_t countOuterCells() const;
 	int8_t countTotalCells() const;
+
+    short int* begin() { return std::begin(ArrayStorage); }
+    short int* end() { return std::end(ArrayStorage); }
+    const short int* begin() const { return std::begin(ArrayStorage); }
+    const short int* end() const { return std::end(ArrayStorage); }
 };
 
 // R2INT rule data structure
@@ -43,9 +54,15 @@ class R2INTRules {
 public:
 	bool R2MAP[33554432] = { false };
 	void ToggleIsotropicTransition(Neighborhood n);
+    void ClearRule();
+
 	bool& operator[](int Index) {  // Now returns a modifiable reference
 		return R2MAP[Index];
 	}
+
+    const bool& operator[](int index) const {
+        return R2MAP[index];
+    }
 };
 
 // Rotation functions
@@ -53,6 +70,7 @@ Neighborhood RotateNeighborhoodCCW(const Neighborhood& lhs);
 Neighborhood RotateNeighborhoodCW(const Neighborhood& lhs);
 Neighborhood MirrorNeighborhoodHorizontally(const Neighborhood& lhs);
 Neighborhood MirrorNeighborhoodVertically(const Neighborhood& lhs);
+std::vector<Neighborhood> GetAllSymmetries(const Neighborhood& n);
 // Shifting functions
 Neighborhood ShiftNeighborhood(const Neighborhood& lhs, int dx, int dy);
 // Conversion functions

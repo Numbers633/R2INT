@@ -1,5 +1,3 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
 #include <array>
 #include <filesystem>
 #include <iostream>
@@ -7,21 +5,17 @@
 #include <random>
 #include <string>
 
-#include "Grid.h"
+#include "World.h"
 #include "OffsetStruct.h"
 #include "R2INT_File.h"
+#include "RuleEditor.h"
+#include "gui.h"
 
 R2INTRules globalRule;
 
-#ifdef _DEBUG
-#define PERCENT_INCREMENT 2097152
-#else
-#define PERCENT_INCREMENT 8388608
-#endif
-
 void InitializeRule()
 {
-    std::cout << "Loading. . ." << std::endl;
+    std::cout << "Initializing rule..." << std::endl;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -55,69 +49,63 @@ void InitializeRule()
             std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
         }
     }
+
+    std::cout << "Initializing rule complete." << std::endl;
 }
 
 int main() {
-    std::cout << "Initializing rule..." << std::endl;
     InitializeRule();
-    std::cout << "Initializing rule complete." << std::endl;
     std::cout << "Initializing grid..." << std::endl;
     World currentWorld;
     World originalWorld = currentWorld;
     std::cout << "Initialize grid complete!" << std::endl;
 
+    // Load font
+    sf::Font font;
+    if (!font.openFromFile("assets\\arial.ttf")) {
+        std::cerr << "Failed to load font!\n";
+        return -1;
+    }
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> rnd(0, 7);
+
+    RuleEditor ruleEditor(gen, font, globalRule);
 
     //
     // Playback variables
     //
     bool isPlaying = false;
-    
+
+    // Timer variables
     float timeStep = 1.0f / 60.0f;  // 60 updates per second
     float accumulator = 0.0f;
-
     sf::Clock clock;
     int frameCount = 0;
-    int generation = 0;
     float elapsedTime = 0.0f;
-
-    float cellSize = 10.f;
-    int n_states = 2;
 
     // Edit variables
     int drawingState = 0;
-    
-    // Variables for the rule editor
-    Neighborhood  editorNeighborhood;
-    for (int i = 0; i < 25; i++)
-    {
-        editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
-    }
 
-    // Colors for multistate rules
-    sf::Color colors[11];
+    // Colors for multistate rules (obtined by an algorithm I made; is it possible to make that run faster than O(n)?)
+    std::vector<sf::Color> colors(4);
     colors[0] = sf::Color::Black;
     colors[1] = sf::Color::White;
     colors[2] = sf::Color::Cyan;
     colors[3] = sf::Color::Magenta;
-    colors[4] = sf::Color::Yellow;
-    colors[5] = sf::Color::Blue;
-    colors[6] = sf::Color::Green;
-    colors[7] = sf::Color::Red;
-    colors[8] = sf::Color(127, 255, 255, 255);
-    colors[9] = sf::Color(255, 127, 255, 255);
-    colors[10] = sf::Color(255, 255, 127, 255);
 
-    sf::Color ruleEditorColors[4];
+    // RuleEditor colors is obtained by performing simple mat to the standard colors
+    // R: 0.875r, G = 0.875g, B = 0.6875b + 32
+    std::vector<sf::Color> ruleEditorColors(4);
     ruleEditorColors[0] = sf::Color::Color(0, 64, 32);
     ruleEditorColors[1] = sf::Color::Color(224, 255, 240);
     ruleEditorColors[2] = sf::Color::Color(0, 255, 240);
     ruleEditorColors[3] = sf::Color::Color(224, 64, 240);
 
-    sf::RenderWindow window(sf::VideoMode({ 640, 640 }), "R2INT");
+    sf::RenderWindow window(sf::VideoMode({ 1024, 768 }), "R2INT");
     std::unique_ptr<sf::RenderWindow> secondWindow = nullptr;
+    window.setFramerateLimit(60);
 
     // Camera variables
     sf::Vector2f previousMousePosition;
@@ -126,22 +114,89 @@ int main() {
     bool isRightMouseDown = false;
     bool isLeftMouseDown = false;
 
-    // Load font
-    sf::Font font;
-    if (!font.openFromFile("arial.ttf")) {
-        std::cerr << "Failed to load font!\n";
-        return -1;
-    }
-
-    sf::Text menuText(font, "Open Rule Editor", 24);
-    menuText.setPosition({ 10, 10 });
-    menuText.setFillColor(sf::Color::White);
-
     sf::View view;
     view.setSize(static_cast<sf::Vector2f>(window.getSize()));
     view.setCenter({ view.getSize().x / 2 , view.getSize().y / 2});
 
+    sf::Vector2u newSize = window.getSize();
+    sf::Vector2f newSizef(static_cast<sf::Vector2f>(newSize));
+
+    // GUI setup
     sf::View uiView;
+    uiView.setSize(newSizef);
+    uiView.setCenter(newSizef * 0.5f);
+
+    MainGUI mainGui(window.getSize());
+    MenuManager menuManager;
+    menuManager.SetColorFunction([](int index, bool hovered) {
+        return hovered ? sf::Color(128, 255, 192) : sf::Color(128, 160, 144);
+        });
+    Menu settingsMenu(1, 2, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font, { "Pattern", "Rule Editor" }, 64 );
+    settingsMenu.centerIn(newSize);
+    Menu patternMenu(2, 2, { 384.f, 72.f }, { 72.f, 72.f }, { 60.f, 24.f }, font,
+        { "Clear", "Randomize" , "Save Pattern", "???" }, 64);
+
+    patternMenu.centerIn(newSize);
+
+    // Make the callbacks for the main GUI buttons
+    auto PlayPause = [&]() {
+        isPlaying = !isPlaying;
+        sf::Color playColor = isPlaying ? sf::Color(0, 192, 96) : sf::Color(0, 255, 128);
+        sf::Texture& texture = isPlaying ? mainGui.pauseTex : mainGui.playTex;
+        mainGui.playButton.setColor(playColor);
+        mainGui.playButton.SetIcon(texture);
+        };
+    auto Reset = [&]() {
+        currentWorld = originalWorld;
+        isPlaying = false;
+        mainGui.playButton.setColor(sf::Color(0, 255, 128));
+        mainGui.playButton.SetIcon(mainGui.playTex);
+        };
+    auto ToggleSettingsMenu = [&]() {
+        menuManager.Toggle("Settings");
+        };
+    auto OpenRuleEditor = [&]() {
+        if (!secondWindow) {
+            secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1440, 720 }), "R2INT - Rule Editor");
+        }
+        isLeftMouseDown = false;
+        isRightMouseDown = false;
+        menuManager.Close();
+        };
+    auto OpenPatternsMenu = [&]() {
+        menuManager.Open("Patterns");
+        };
+    auto ClearPattern = [&]() {
+        currentWorld = World();
+        originalWorld = currentWorld;
+        isPlaying = false;
+        mainGui.playButton.setColor(sf::Color(0, 255, 128));
+        mainGui.playButton.SetIcon(mainGui.playTex);
+        menuManager.Close();
+        };
+    auto Randomize = [&]() {
+        currentWorld.TestRandomize();
+        originalWorld = currentWorld;
+        isPlaying = false;
+        mainGui.playButton.setColor(sf::Color(0, 255, 128));
+        mainGui.playButton.SetIcon(mainGui.playTex);
+        menuManager.Close();
+        };
+    auto SavePattern = [&]() {
+        currentWorld.PrintRLE();
+        };
+    mainGui.playButton.SetCallback(PlayPause);
+    mainGui.resetButton.SetCallback(Reset);
+    mainGui.settingsButton.SetCallback(ToggleSettingsMenu);
+    settingsMenu.SetButtonCallback(0, OpenPatternsMenu);
+    settingsMenu.SetButtonCallback(1, OpenRuleEditor);
+    patternMenu.SetButtonCallback(0, ClearPattern);
+    patternMenu.SetButtonCallback(1, Randomize);
+    patternMenu.SetButtonCallback(2, SavePattern);
+
+    // Finally, add the menus to the manager
+    menuManager.AddMenu("Settings", std::move(settingsMenu));
+    menuManager.AddMenu("Patterns", std::move(patternMenu));
 
     while (window.isOpen()) {  // Replace `mainWindow` with `window`
         while (const std::optional event = window.pollEvent()) {  // Use `window` for event polling
@@ -153,6 +208,8 @@ int main() {
                 }
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
+                // Handle CA interaction
+                window.setView(view);
                 if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Right)
                 {
                     isRightMouseDown = true;
@@ -160,30 +217,21 @@ int main() {
                     sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
                     sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
 
-                    float x = mouseWorldPos.x;
-                    float y = mouseWorldPos.y - 50.f;
-
-                    // Global cell coordinates
-                    int i = static_cast<int>(x / cellSize);
-                    int j = static_cast<int>(y / cellSize);
-
-                    // No check against GRID_DIMENSIONS — these are global coordinates
-                    drawingState = (currentWorld.GetCellStateAt({ i, j }) + 1) % n_states;
+                    sf::Vector2i pos = currentWorld.GetWorldCoords(mouseWorldPos);
+                    drawingState = (currentWorld.GetCellStateAt(pos) + 1) % currentWorld.n_states;
                 }
                 else if (event->getIf<sf::Event::MouseButtonPressed>()->button == sf::Mouse::Button::Left)
                 {
-                    window.setView(view);
                     isLeftMouseDown = true;
                     previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));
                 }
+                // Handle GUI clicks
+                window.setView(uiView);
+
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-                if (menuText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePosition))) {
-                    if (!secondWindow) {
-                        secondWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode({ 1440, 720 }), "R2INT - Rule Editor");
-                    }
-                    isLeftMouseDown = false;
-                    isRightMouseDown = false;
-                }
+
+                mainGui.HandleMouseClick(static_cast<sf::Vector2f>(mousePosition));
+                menuManager.HandleClick(static_cast<sf::Vector2f>(mousePosition));
             }
             else if (event->is<sf::Event::MouseButtonReleased>()) {
                 if (event->getIf<sf::Event::MouseButtonReleased>()->button == sf::Mouse::Button::Right)
@@ -199,9 +247,7 @@ int main() {
                 sf::Keyboard::Key keyPress = event->getIf<sf::Event::KeyPressed>()->code;
                 if (keyPress == sf::Keyboard::Key::R)
                 {
-                    currentWorld = originalWorld;
-                    generation = 0;
-                    isPlaying = false;
+                    Reset();
                 }
                 else if (keyPress == sf::Keyboard::Key::Equal)
                 {
@@ -225,7 +271,7 @@ int main() {
                 }
                 else if (keyPress == sf::Keyboard::Key::Enter)
                 {
-                    isPlaying = !isPlaying;
+                    PlayPause();
                 }
                 else if (keyPress == sf::Keyboard::Key::Space)
                 {
@@ -244,6 +290,9 @@ int main() {
                 // Update UI view to match pixel coords (top-left = (0,0), bottom-right = (width, height))
                 uiView.setSize(newSizef);
                 uiView.setCenter(newSizef * 0.5f);
+
+                mainGui.Resize(newSize);
+                menuManager.centerMenus(newSize);
             }
         }
 
@@ -253,8 +302,9 @@ int main() {
 
         // Process the grid update at a fixed timestep
         while (accumulator >= timeStep) {
-            generation++;
             currentWorld.Simulate(globalRule);
+            //currentWorld.PrintRLE();
+            
             accumulator -= timeStep;
         }
 
@@ -262,29 +312,26 @@ int main() {
         elapsedTime += deltaTime;
         frameCount++;
 
-        if (elapsedTime >= 10.f)
+        if (elapsedTime >= 32.f)
         {
-            std::cout << "FPS: " << frameCount / 10.f << std::endl;
+            std::cout << "FPS: " << frameCount / 32.f << std::endl;
             elapsedTime = 0.0f;
             frameCount = 0;
         }
 
-        window.clear(sf::Color::Black);
+        window.clear(colors[currentWorld.VoidState]);
+        window.setView(view);
 
         if (isRightMouseDown) {
             sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
             sf::Vector2f mouseWorldPos = window.mapPixelToCoords(pixelPos, view);
-            float x = mouseWorldPos.x;
-            float y = mouseWorldPos.y - 50.f;
 
-            int i = (x >= 0.f) ? static_cast<int>(x / cellSize) : static_cast<int>((x - cellSize + 1.f) / cellSize);
-            int j = (y >= 0.f) ? static_cast<int>(y / cellSize) : static_cast<int>((y - cellSize + 1.f) / cellSize);
+            sf::Vector2i pos = currentWorld.GetWorldCoords(mouseWorldPos);
 
-            if (generation == 0)
-                originalWorld.PaintAtCell({ i, j }, drawingState);
+            if (currentWorld.Generation == 0)
+                originalWorld.PaintAtCell(pos, drawingState);
 
-            currentWorld.PaintAtCell({ i, j }, drawingState);
-
+            currentWorld.PaintAtCell(pos, drawingState);
         }
         if (isLeftMouseDown) {
             window.setView(view);  // Use current view for mapping
@@ -295,174 +342,30 @@ int main() {
             window.setView(view);
             previousMousePosition = window.mapPixelToCoords(sf::Mouse::getPosition(window));  // <== Update after view.move
         }
-
-        // Calculate the total number of grids to draw
-        size_t totalGrids = currentWorld.contents.size();
-
-        // Create a VertexArray that will be large enough to hold all the cells from all grids
-        sf::VertexArray vertexArray(sf::PrimitiveType::Triangles, totalGrids* GRID_DIMENSIONS* GRID_DIMENSIONS * 6);
-
-        // Index to insert the vertices into the vertex array
-        size_t vertexIndex = 0;
-
-        for (const auto& entry : currentWorld.contents) {
-            const GridCoord& gridCoord = entry.first;
-            const Chunk& gridData = entry.second;
-
-            float offsetX = gridCoord.x * GRID_DIMENSIONS * cellSize;
-            float offsetY = gridCoord.y * GRID_DIMENSIONS * cellSize;
-
-            // Compute a deterministic random seed based on grid coordinates
-            std::size_t hashValue = std::hash<int>()(gridCoord.x) ^ (std::hash<int>()(gridCoord.y) << 1);
-            unsigned char bgR = static_cast<unsigned char>((hashValue & 0xFF) % 64);
-            unsigned char bgG = static_cast<unsigned char>(((hashValue >> 8) & 0xFF) % 64);
-            unsigned char bgB = static_cast<unsigned char>(((hashValue >> 16) & 0xFF) % 64);
-            sf::Color gridBgColor(bgR, bgG, bgB);
-
-            for (int i = 0; i < GRID_DIMENSIONS; i++) {
-                for (int j = 0; j < GRID_DIMENSIONS; j++) {
-                    float x = offsetX + i * cellSize;
-                    float y = offsetY + j * cellSize + 50;
-
-                    __int8 cellState = currentWorld.GetCellStateAt({
-                        gridCoord.x * GRID_DIMENSIONS + i,
-                        gridCoord.y * GRID_DIMENSIONS + j
-                        });
-
-                    sf::Color color = (cellState == currentWorld.VoidState) ? gridBgColor : colors[cellState];
-
-                    // First triangle
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
-
-                    // Second triangle
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x, y + cellSize);
-                    vertexArray[vertexIndex++].position = sf::Vector2f(x + cellSize, y + cellSize);
-
-                    for (int k = 0; k < 6; k++)
-                        vertexArray[vertexIndex - 6 + k].color = color;
-                }
-            }
-        }
-
-
-        // Draw the whole world
-        window.setView(view);
-        window.draw(vertexArray);
+        std::vector<sf::Color> colorVec(std::begin(colors), std::end(colors));
+        currentWorld.Draw(window, colorVec);
 
         // Draw UI
         window.setView(uiView);
-        window.draw(menuText);
+        menuManager.Draw(window, static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
+        mainGui.Draw(window);
 
-        // Present the frame
         window.display();
 
         if (secondWindow && secondWindow->isOpen()) {
-            sf::Text clearText(font, "Clear Rule", 48);
-            clearText.setPosition({ 730, 10 });
-            clearText.setFillColor(sf::Color::Black);
-            sf::Text saveText(font, "Save Rule", 48);
-            saveText.setPosition({ 730, 670 });
-            saveText.setFillColor(sf::Color::Black);
             while (const std::optional secondEvent = secondWindow->pollEvent()) {
                 if (secondEvent->is<sf::Event::Closed>()) {
                     secondWindow->close();
                     secondWindow.reset();  // Properly close and delete the second window
                     break;
                 }
-                else if (secondEvent->is<sf::Event::MouseButtonPressed>()) {
-                    sf::Vector2i pixelPos = sf::Mouse::getPosition(*secondWindow);
-                    sf::Vector2f mouseWindowCoords = secondWindow->mapPixelToCoords(pixelPos, secondWindow->getDefaultView());
 
-                    if (mouseWindowCoords.x >= 720.f) {
-                        if (clearText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos))) {
-                            for (unsigned int i = 0; i < 33554432; i++)
-                            {
-                                Neighborhood n = ConvertIntToNeighborhood(i);
-                                globalRule[i] = 0;
-                                if (i % PERCENT_INCREMENT == PERCENT_INCREMENT - 1)
-                                {
-                                    std::cout << (i * 100 + 100) / 33554432 << "% complete." << std::endl;
-                                }
-                            }
-                        }
-                        else if (saveText.getGlobalBounds().contains(static_cast<sf::Vector2f>(pixelPos)))
-                        {
-                            SaveTor2intFile(globalRule);
-                        }
-                        else
-                        {
-                            globalRule.ToggleIsotropicTransition(editorNeighborhood);
-                        }
-                    }
-                    else
-                    {
-                        int modifyID = floor(mouseWindowCoords.x / 144) + 5 * floor(mouseWindowCoords.y / 144);
-                        editorNeighborhood[modifyID] = 1 - editorNeighborhood[modifyID];
-                    }
-                }
-                else if (secondEvent->is<sf::Event::KeyPressed>()) {
-                    sf::Keyboard::Key keyPress = secondEvent->getIf<sf::Event::KeyPressed>()->code;
-                    if (keyPress == sf::Keyboard::Key::R)
-                    {
-                        for (int i = 0; i < 25; i++)
-                        {
-                            editorNeighborhood[i] = rnd(gen) > 4 ? 1 : 0;
-                        }
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Left)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, -1, 0);
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Right)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 1, 0);
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Up)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 0, -1);
-                    }
-                    else if (keyPress == sf::Keyboard::Key::Down)
-                    {
-                        editorNeighborhood = ShiftNeighborhood(editorNeighborhood, 0, 1);
-                    }
-                }
+                ruleEditor.HandleEvent(*secondEvent, globalRule, gen, *secondWindow);
             }
 
             if (secondWindow)
             {
-                secondWindow->clear(sf::Color::Color(0, 160, 80, 240));
-                sf::RectangleShape rc;
-                for (int i = 0; i < 5; i++)
-                {
-                    for (int j = 0; j < 5; j++)
-                    {
-                        if (i == 2 && j == 2)
-                        {
-                            rc.setFillColor(colors[editorNeighborhood[5 * j + i]]);
-                        }
-                        else
-                        {
-                            rc.setFillColor(ruleEditorColors[editorNeighborhood[5 * j + i]]);
-                        }
-                        
-                        rc.setPosition({ i * 144.f + 8.f, j * 144.f + 8.f });
-                        rc.setSize({ 128.f, 128.f });
-                        secondWindow->draw(rc);
-                    }
-                }
-
-                int TransitionID = ConvertNeighborhoodToInt(editorNeighborhood);
-                rc.setFillColor(ruleEditorColors[globalRule[TransitionID]]);
-
-                rc.setPosition({ 976.f + 8.f, 252.f + 8.f });
-                rc.setSize({ 192.f, 192.f });
-                secondWindow->draw(rc);
-                secondWindow->draw(clearText);
-                secondWindow->draw(saveText);
-                secondWindow->display();
+                ruleEditor.Draw(secondWindow.get(), colors, ruleEditorColors, globalRule);
             }
         }
     }
