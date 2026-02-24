@@ -26,34 +26,63 @@ void SaveTor2intFile(R2INTRules& saveRule)
 
     std::cout << "Saving to " << saveName << std::endl;
 
+    // Dedup set
     std::unordered_set<std::string> writtenCompressed;
-    writtenCompressed.reserve(33554432 / 2); // Rough estimate
+    writtenCompressed.reserve(33554432 / 2);
+
+    // Correct output ordering
+    static const int order[25] = {
+        12, 7, 8, 13, 18,
+        17,16,11,6,2,
+        3,4,9,14,19,
+        24,23,22,21,20,
+        15,10,5,0,1
+    };
 
     std::vector<int> allRules(33554432);
     std::iota(allRules.begin(), allRules.end(), 0);
 
-    // Parallel loop
     std::mutex mtx;
-    std::for_each(std::execution::par, allRules.begin(), allRules.end(), [&](int i) {
-        if (FindLowestNeighborhoodValue(i) != i) return;
-        if (!saveRule.R2MAP[i]) return;
 
-        Neighborhood n = ConvertIntToNeighborhood(i);
-        std::string compressed(25, '0');
+    std::for_each(std::execution::par, allRules.begin(), allRules.end(),
+        [&](int i)
+        {
+            // Canonical representative only
+            if (FindLowestNeighborhoodValue(i) != i) return;
 
-        for (int bit = 0; bit < 25; bit++)
-            compressed[bit] = n[bit] ? '1' : '0';
+            if (!saveRule.R2MAP[i]) return;
 
-        for (int bit = 0; bit < 25; bit++) {
-            int neighborRule = i ^ (1 << bit);
-            if (neighborRule >= 0 && neighborRule < 33554432 && saveRule.R2MAP[neighborRule])
-                compressed[bit] = 'x';
-        }
+            Neighborhood n = ConvertIntToNeighborhood(i);
 
-        std::lock_guard<std::mutex> lock(mtx);
-        if (writtenCompressed.insert(compressed).second) {
-            outFile << compressed << "\n";
-        }
+            std::string compressed(25, '0');
+
+            // Build in FILE ORDER
+            for (int outIndex = 0; outIndex < 25; ++outIndex)
+            {
+                int srcBit = order[outIndex];
+                compressed[outIndex] = n[srcBit] ? '1' : '0';
+            }
+
+            // Apply neighbor-x compression (still using raw bit identity)
+            for (int outIndex = 0; outIndex < 25; ++outIndex)
+            {
+                int srcBit = order[outIndex];
+                int neighborRule = i ^ (1 << srcBit);
+
+                if (neighborRule >= 0 &&
+                    neighborRule < 33554432 &&
+                    saveRule.R2MAP[neighborRule])
+                {
+                    compressed[outIndex] = 'x';
+                }
+            }
+
+            // Thread-safe insert + write
+            std::lock_guard<std::mutex> lock(mtx);
+            if (writtenCompressed.insert(compressed).second)
+            {
+                outFile << compressed << "\n";
+            }
         });
 
     outFile.close();
