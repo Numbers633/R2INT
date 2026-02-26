@@ -92,59 +92,79 @@ void SaveTor2intFile(R2INTRules& saveRule)
 void LoadFromr2intFile(R2INTRules& loadRule)
 {
     std::cout << "Enter the filename to load your rule from: ";
-    std::string loadName = "";
+    std::string loadName;
     std::cin >> loadName;
-    // Append extension if not already present
+
+    // Append extension if not present
     if (loadName.size() < 6 || loadName.substr(loadName.size() - 6) != ".r2int")
-    {
         loadName += ".r2int";
-    }
+
     std::ifstream inFile(loadName);
-    if (!inFile)
-    {
+    if (!inFile) {
         std::cerr << "Error: Could not open " << loadName << " for reading.\n";
         return;
     }
+
     std::cout << "Loading from " << loadName << std::endl;
+
     // Clear existing rule
     for (unsigned int i = 0; i < 33554432; i++)
-    {
         loadRule[i] = 0;
-    }
+
+    // Same permutation used in saver
+    static const int order[25] = {
+        12, 7, 8, 13, 18,
+        17,16,11,6,2,
+        3,4,9,14,19,
+        24,23,22,21,20,
+        15,10,5,0,1
+    };
+
     std::string line;
     while (std::getline(inFile, line))
     {
-        if (line.length() != 25)
-        {
+        if (line.length() != 25) {
             std::cerr << "Warning: Skipping invalid line (incorrect length): " << line << std::endl;
             continue;
         }
+
+        // Collect positions with 'x'
+        std::vector<int> xPositions;
         Neighborhood n;
-        const int perm[25] = {
-        12, 7, 8, 13, 18, 17, 16, 11, 6, 2,
-         3,  4, 9, 14, 19, 24, 23, 22, 21, 20,
-        15, 10, 5,  0,  1
-        };
-
-        for (int i = 0; i < 25; i++)
-        {
-            int bit = (line[i] == '1') ? 1 : 0;
-            n[perm[i]] = bit;
+        for (int i = 0; i < 25; i++) {
+            if (line[i] == '1') n[order[i]] = 1;
+            else if (line[i] == '0') n[order[i]] = 0;
+            else if (line[i] == 'x') {
+                n[order[i]] = 0; // start as 0
+                xPositions.push_back(order[i]);
+            }
+            else {
+                std::cerr << "Warning: Invalid character in line: " << line << std::endl;
+                continue;
+            }
         }
 
-        if (n[12] > 1)
+        // Iterate over all combinations of 'x' positions
+        size_t numCombinations = 1ULL << xPositions.size();
+        for (size_t mask = 0; mask < numCombinations; ++mask)
         {
-            std::cerr << "Warning: Skipping invalid line (center cell state > 1): " << line << std::endl;
-            continue;
-        }
+            for (size_t bit = 0; bit < xPositions.size(); ++bit)
+            {
+                n[xPositions[bit]] = (mask & (1ULL << bit)) ? 1 : 0;
+            }
 
-        // Set rule for all symmetric variants
-        for (const auto& variant : GetAllSymmetries(n))
-        {
-            int index = ConvertNeighborhoodToInt(variant);
-            loadRule[index] = 1;
+            // Center cell must be <=1
+            if (n[12] > 1) continue;
+
+            // Insert rule for all symmetric variants
+            for (const auto& variant : GetAllSymmetries(n))
+            {
+                int index = ConvertNeighborhoodToInt(variant);
+                loadRule[index] = 1;
+            }
         }
     }
+
     inFile.close();
     std::cout << "Load complete!" << std::endl;
 }
